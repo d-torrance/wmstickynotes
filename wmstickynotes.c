@@ -195,16 +195,10 @@ void create_note(Note *old_note, int color)
 	g_signal_connect(G_OBJECT(top_bar_box), "button-press-event", G_CALLBACK(bar_pressed), note);
 }
 
-void new_note_button_clicked(GtkButton *button, char *color)
+void new_note_button_clicked(GtkButton *button, gpointer color)
 {
-	int c;
-
-	for(c=0; c<=5; c++) {
-		if(!strcmp(color_schemes[c].name, color)) break;
-	}
-	if(strcmp(color_schemes[c].name, color)) c = 0;
-
-	create_note(NULL, c);
+	if((int)color > 5) color = 0;
+	create_note(NULL, (int)color);
 }
 
 void read_old_notes()
@@ -334,12 +328,12 @@ int main(int argc, char *argv[])
 	XSetWMHints(GDK_DISPLAY(), GDK_WINDOW_XWINDOW(window->window), &mywmhints);
 
 	g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), NULL);
-	g_signal_connect(G_OBJECT(yellow_button), "clicked", G_CALLBACK(new_note_button_clicked), "yellow");
-	g_signal_connect(G_OBJECT(green_button), "clicked", G_CALLBACK(new_note_button_clicked), "green");
-	g_signal_connect(G_OBJECT(orange_button), "clicked", G_CALLBACK(new_note_button_clicked), "orange");
-	g_signal_connect(G_OBJECT(red_button), "clicked", G_CALLBACK(new_note_button_clicked), "red");
-	g_signal_connect(G_OBJECT(blue_button), "clicked", G_CALLBACK(new_note_button_clicked), "blue");
-	g_signal_connect(G_OBJECT(white_button), "clicked", G_CALLBACK(new_note_button_clicked), "white");
+	g_signal_connect(G_OBJECT(yellow_button), "clicked", G_CALLBACK(new_note_button_clicked), (gpointer)0);
+	g_signal_connect(G_OBJECT(green_button), "clicked", G_CALLBACK(new_note_button_clicked), (gpointer)1);
+	g_signal_connect(G_OBJECT(orange_button), "clicked", G_CALLBACK(new_note_button_clicked), (gpointer)2);
+	g_signal_connect(G_OBJECT(red_button), "clicked", G_CALLBACK(new_note_button_clicked), (gpointer)3);
+	g_signal_connect(G_OBJECT(blue_button), "clicked", G_CALLBACK(new_note_button_clicked), (gpointer)4);
+	g_signal_connect(G_OBJECT(white_button), "clicked", G_CALLBACK(new_note_button_clicked), (gpointer)5);
 
 	umask(077);
 
