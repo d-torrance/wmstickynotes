@@ -115,6 +115,7 @@ void create_note(Note *old_note, int color)
 	GtkWidget *resize_button_box;
 	GdkPixmap *resize_button_pixmap;
 	GdkBitmap *resize_button_mask;
+	GdkGC *gc;
 	GdkColor gcolor;
 
 	Note *note;
@@ -144,7 +145,7 @@ void create_note(Note *old_note, int color)
 	top_bar_box = gtk_event_box_new();
 	gtk_widget_set_size_request(top_bar, -1, 10);
 	bottom_bar = gtk_label_new("");
-	gtk_widget_set_size_request(bottom_bar, -1, 10);
+	gtk_widget_set_size_request(bottom_bar, -1, 8);
 
 	delete_button_pixmap = gdk_pixmap_colormap_create_from_xpm_d(NULL, colormap, &delete_button_mask, NULL, delete_button_xpm);
 	delete_button = gtk_image_new_from_pixmap(delete_button_pixmap, delete_button_mask);
@@ -161,6 +162,7 @@ void create_note(Note *old_note, int color)
 	gdk_color_parse(color_schemes[note->color].background, &gcolor);
 	gtk_widget_modify_base(text_widget, GTK_STATE_NORMAL, &gcolor);
 	gtk_widget_modify_bg(window, GTK_STATE_NORMAL, &gcolor);
+	gtk_widget_modify_bg(resize_button_box, GTK_STATE_NORMAL, &gcolor);
 
 	gtk_container_add(GTK_CONTAINER(window), vbox);
 	gtk_container_add(GTK_CONTAINER(top_bar_box), top_bar);
