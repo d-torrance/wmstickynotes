@@ -22,16 +22,19 @@ typedef struct {
 	int height;
 	int color;
 	GtkWidget *window;
-	GtkTextBuffer *text_buffer;
+	GtkWidget *text_widget;
+	GtkWidget *top_bar_box;
+	GtkWidget *delete_button_box;
+	GtkWidget *resize_button_box;
 } Note;
 
 ColorScheme color_schemes[] = {
-	{"yellow",	"#ffff00",	"#ffff88"},
-	{"green",	"#66ff00",	"#d0f0c0"},
-	{"orange",	"#ff7f00",	"#ffe5b4"},
-	{"red",		"#ff007f",	"#ffc0cb"},
-	{"blue",	"#0000ff",	"#ccccff"},
-	{"white",	"#aaaaaa",	"#ffffff"}};
+	{"Yellow",	"#ffff00",	"#ffff88"},
+	{"Green",	"#66ff00",	"#d0f0c0"},
+	{"Orange",	"#ff7f00",	"#ffe5b4"},
+	{"Red",		"#ff007f",	"#ffc0cb"},
+	{"Blue",	"#0000ff",	"#ccccff"},
+	{"White",	"#aaaaaa",	"#ffffff"}};
 
 
 void delete_note(GtkWidget *widget, Note *note);
@@ -43,5 +46,8 @@ void delete_button_pressed(GtkWidget *widget, GdkEventButton *event, GtkWidget *
 void create_note(Note *old_note, int color);
 void new_note_button_clicked(GtkButton *button, gpointer color);
 void read_old_notes();
+void populate_note_popup(GtkTextView *entry, GtkMenu *menu, Note *note);
+void set_current_note_color(GtkMenuItem *menuitem, gpointer color);
+void set_note_color(Note *note, int color);
 
 #endif /* WMSTICKYNOTES_H */
