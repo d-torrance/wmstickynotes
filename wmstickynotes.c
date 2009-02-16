@@ -35,7 +35,8 @@ GdkColormap *colormap;
  * that no ids are clobbered */
 long int highest_note_id = 0;
 
-
+/* The current note that the popup menu was shown for */
+Note *current_note;
 
 void delete_note(GtkWidget *widget, Note *note)
 {
@@ -49,15 +50,16 @@ void save_note(GtkWidget *widget, Note *note)
 {
 	FILE *file;
 	char *filename;
+	GtkTextBuffer *text_buffer;
 	GtkTextIter start;
 	GtkTextIter end;
-
 	gchar *text;
 
-	gtk_text_buffer_get_start_iter(note->text_buffer, &start);
-	gtk_text_buffer_get_end_iter(note->text_buffer, &end);
+	text_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(note->text_widget));
+	gtk_text_buffer_get_start_iter(text_buffer, &start);
+	gtk_text_buffer_get_end_iter(text_buffer, &end);
 
-	text = gtk_text_buffer_get_text(note->text_buffer, &start, &end, FALSE);
+	text = gtk_text_buffer_get_text(text_buffer, &start, &end, FALSE);
 
 	asprintf(&filename, "%d", note->id);
 	file = fopen(filename, "w");
@@ -99,24 +101,19 @@ void delete_button_pressed(GtkWidget *widget, GdkEventButton *event, GtkWidget *
 void create_note(Note *old_note, int color)
 {
 	GtkWidget *window;
-	GtkWidget *text_widget;
 	GtkWidget *vbox;
 	GtkWidget *top_hbox;
 	GtkWidget *mid_hbox;
 	GtkWidget *bottom_bar;
 	GtkWidget *bottom_hbox;
 	GtkWidget *top_bar;
-	GtkWidget *top_bar_box;
 	GtkWidget *delete_button;
-	GtkWidget *delete_button_box;
 	GdkPixmap *delete_button_pixmap;
 	GdkBitmap *delete_button_mask;
 	GtkWidget *resize_button;
-	GtkWidget *resize_button_box;
 	GdkPixmap *resize_button_pixmap;
 	GdkBitmap *resize_button_mask;
-	GdkGC *gc;
-	GdkColor gcolor;
+	GtkTextBuffer *text_buffer;
 
 	Note *note;
 	
@@ -132,8 +129,10 @@ void create_note(Note *old_note, int color)
 	gtk_window_set_decorated(GTK_WINDOW(window), FALSE);
 	gtk_window_set_default_size(GTK_WINDOW(window), 150, 150);
 
-	text_widget = gtk_text_view_new_with_buffer(old_note ? old_note->text_buffer : NULL);
-	note->text_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(text_widget));
+	if(!old_note) {
+		note->text_widget = gtk_text_view_new_with_buffer(NULL);
+	}
+	text_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(note->text_widget));
 
 	note->window = window;
 
@@ -142,37 +141,31 @@ void create_note(Note *old_note, int color)
 	mid_hbox = gtk_hbox_new(FALSE, 0);
 	bottom_hbox = gtk_hbox_new(FALSE, 0);
 	top_bar = gtk_label_new("");
-	top_bar_box = gtk_event_box_new();
+	note->top_bar_box = gtk_event_box_new();
 	gtk_widget_set_size_request(top_bar, -1, 10);
 	bottom_bar = gtk_label_new("");
 	gtk_widget_set_size_request(bottom_bar, -1, 8);
 
 	delete_button_pixmap = gdk_pixmap_colormap_create_from_xpm_d(NULL, colormap, &delete_button_mask, NULL, delete_button_xpm);
 	delete_button = gtk_image_new_from_pixmap(delete_button_pixmap, delete_button_mask);
-	delete_button_box = gtk_event_box_new();
-	gtk_widget_set_size_request(delete_button_box, 10, 10);
+	note->delete_button_box = gtk_event_box_new();
+	gtk_widget_set_size_request(note->delete_button_box, 10, 10);
 
 	resize_button_pixmap = gdk_pixmap_colormap_create_from_xpm_d(NULL, colormap, &resize_button_mask, NULL, resize_button_xpm);
 	resize_button = gtk_image_new_from_pixmap(resize_button_pixmap, resize_button_mask);
-	resize_button_box = gtk_event_box_new();
+	note->resize_button_box = gtk_event_box_new();
 
-	gdk_color_parse(color_schemes[note->color].top, &gcolor);
-	gtk_widget_modify_bg(top_bar_box, GTK_STATE_NORMAL, &gcolor);
-	gtk_widget_modify_bg(delete_button_box, GTK_STATE_NORMAL, &gcolor);
-	gdk_color_parse(color_schemes[note->color].background, &gcolor);
-	gtk_widget_modify_base(text_widget, GTK_STATE_NORMAL, &gcolor);
-	gtk_widget_modify_bg(window, GTK_STATE_NORMAL, &gcolor);
-	gtk_widget_modify_bg(resize_button_box, GTK_STATE_NORMAL, &gcolor);
+	set_note_color(note, note->color);
 
 	gtk_container_add(GTK_CONTAINER(window), vbox);
-	gtk_container_add(GTK_CONTAINER(top_bar_box), top_bar);
-	gtk_container_add(GTK_CONTAINER(delete_button_box), delete_button);
-	gtk_container_add(GTK_CONTAINER(resize_button_box), resize_button);
-	gtk_box_pack_start(GTK_BOX(top_hbox), top_bar_box, TRUE, TRUE, 0);
-	gtk_box_pack_start(GTK_BOX(top_hbox), delete_button_box, FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(mid_hbox), text_widget, TRUE, TRUE, 2);
+	gtk_container_add(GTK_CONTAINER(note->top_bar_box), top_bar);
+	gtk_container_add(GTK_CONTAINER(note->delete_button_box), delete_button);
+	gtk_container_add(GTK_CONTAINER(note->resize_button_box), resize_button);
+	gtk_box_pack_start(GTK_BOX(top_hbox), note->top_bar_box, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(top_hbox), note->delete_button_box, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(mid_hbox), note->text_widget, TRUE, TRUE, 2);
 	gtk_box_pack_start(GTK_BOX(bottom_hbox), bottom_bar, TRUE, TRUE, 0);
-	gtk_box_pack_start(GTK_BOX(bottom_hbox), resize_button_box, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(bottom_hbox), note->resize_button_box, FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(vbox), top_hbox, FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(vbox), mid_hbox, TRUE, TRUE, 0);
 	gtk_box_pack_start(GTK_BOX(vbox), bottom_hbox, FALSE, FALSE, 0);
@@ -189,10 +182,11 @@ void create_note(Note *old_note, int color)
 
 	g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(delete_note), note);
 	g_signal_connect(G_OBJECT(window), "configure-event", G_CALLBACK(note_configure_event), note);
-	g_signal_connect(G_OBJECT(delete_button_box), "button-press-event", G_CALLBACK(delete_button_pressed), window);
-	g_signal_connect(G_OBJECT(resize_button_box), "button-press-event", G_CALLBACK(resize_button_pressed), note);
-	g_signal_connect(G_OBJECT(note->text_buffer), "changed", G_CALLBACK(save_note), note);
-	g_signal_connect(G_OBJECT(top_bar_box), "button-press-event", G_CALLBACK(bar_pressed), note);
+	g_signal_connect(G_OBJECT(note->delete_button_box), "button-press-event", G_CALLBACK(delete_button_pressed), window);
+	g_signal_connect(G_OBJECT(note->resize_button_box), "button-press-event", G_CALLBACK(resize_button_pressed), note);
+	g_signal_connect(G_OBJECT(text_buffer), "changed", G_CALLBACK(save_note), note);
+	g_signal_connect(G_OBJECT(note->top_bar_box), "button-press-event", G_CALLBACK(bar_pressed), note);
+	g_signal_connect(G_OBJECT(note->text_widget), "populate-popup", G_CALLBACK(populate_note_popup), note);
 }
 
 void new_note_button_clicked(GtkButton *button, gpointer color)
@@ -204,6 +198,7 @@ void new_note_button_clicked(GtkButton *button, gpointer color)
 void read_old_notes()
 {
 	Note *note;
+	GtkTextBuffer *text_buffer;
 	GtkTextIter iter;
 	DIR *dir = opendir(".");
 	FILE *file;
@@ -228,11 +223,13 @@ void read_old_notes()
 		fscanf(file, "%d,%d,%d,%d,%d\n", &(note->x), &(note->y), &(note->width), &(note->height), &(note->color));
 		if(note->color > 5) note->color = 0;
 
-		note->text_buffer = gtk_text_buffer_new(NULL);
+		text_buffer = gtk_text_buffer_new(NULL);
 		while(fgets(buffer, 256, file)) {
-			gtk_text_buffer_get_end_iter(note->text_buffer, &iter);
-			gtk_text_buffer_insert(note->text_buffer, &iter, buffer, -1);
+			gtk_text_buffer_get_end_iter(text_buffer, &iter);
+			gtk_text_buffer_insert(text_buffer, &iter, buffer, -1);
 		}
+
+		note->text_widget = gtk_text_view_new_with_buffer(text_buffer);
 
 		create_note(note, 0);
 
@@ -366,3 +363,46 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
+void populate_note_popup(GtkTextView *entry, GtkMenu *menu, Note *note)
+{
+	GtkWidget *color_menu;
+	GtkWidget *color_item;
+	GtkWidget *item;
+	int i;
+
+	color_menu = gtk_menu_new();
+	color_item = gtk_menu_item_new_with_label("Color");
+
+	gtk_menu_item_set_submenu(GTK_MENU_ITEM(color_item), color_menu);
+	gtk_menu_shell_prepend(GTK_MENU_SHELL(menu), color_item);
+
+	current_note = note;
+	for(i=0; i<5; i++) {
+		item = gtk_menu_item_new_with_label(color_schemes[i].name);
+		gtk_menu_shell_append(GTK_MENU_SHELL(color_menu), item);
+		g_signal_connect(G_OBJECT(item), "activate", G_CALLBACK(set_current_note_color), (gpointer)i);
+	}
+
+	gtk_widget_show_all(GTK_WIDGET(menu));
+}
+
+void set_current_note_color(GtkMenuItem *menuitem, gpointer color)
+{
+	set_note_color(current_note, (int)color);
+}
+
+void set_note_color(Note *note, int color)
+{
+	GdkColor gcolor;
+
+	note->color = color;
+
+	gdk_color_parse(color_schemes[note->color].top, &gcolor);
+	gtk_widget_modify_bg(note->top_bar_box, GTK_STATE_NORMAL, &gcolor);
+	gtk_widget_modify_bg(note->delete_button_box, GTK_STATE_NORMAL, &gcolor);
+
+	gdk_color_parse(color_schemes[note->color].background, &gcolor);
+	gtk_widget_modify_base(note->text_widget, GTK_STATE_NORMAL, &gcolor);
+	gtk_widget_modify_bg(note->window, GTK_STATE_NORMAL, &gcolor);
+	gtk_widget_modify_bg(note->resize_button_box, GTK_STATE_NORMAL, &gcolor);
+}
