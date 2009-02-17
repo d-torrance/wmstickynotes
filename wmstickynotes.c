@@ -19,6 +19,7 @@
 #include <dirent.h>
 
 #include "wmstickynotes.h"
+#include "wmstickynotes.xpm"
 #include "delete_button.xpm"
 #include "resize_button.xpm"
 #include "config.h"
@@ -96,6 +97,13 @@ void delete_button_pressed(GtkWidget *widget, GdkEventButton *event, GtkWidget *
 	if(event->button != 1) return;
 
 	gtk_widget_destroy(window);
+}
+
+void main_button_pressed(GtkWidget *widget, GdkEventButton *event, gpointer user_data)
+{
+	if(event->button != 1) return;
+
+	create_note(NULL, 0);
 }
 
 void create_note(Note *old_note, int color)
@@ -191,7 +199,7 @@ void create_note(Note *old_note, int color)
 
 void new_note_button_clicked(GtkButton *button, gpointer color)
 {
-	if((int)color > 5) color = 0;
+	if((int)color >= num_color_schemes) color = 0;
 	create_note(NULL, (int)color);
 }
 
@@ -221,7 +229,7 @@ void read_old_notes()
 		if(note->id > highest_note_id) highest_note_id = note->id;
 
 		fscanf(file, "%d,%d,%d,%d,%d\n", &(note->x), &(note->y), &(note->width), &(note->height), &(note->color));
-		if(note->color > 5) note->color = 0;
+		if(note->color >= num_color_schemes) note->color = 0;
 
 		text_buffer = gtk_text_buffer_new(NULL);
 		while(fgets(buffer, 256, file)) {
@@ -243,17 +251,12 @@ int main(int argc, char *argv[])
 {
 	GtkWidget *window;
 	GtkWidget *box;
-	GtkWidget *vbox;
-	GtkWidget *hbox;
-	GtkWidget *table;
-	GtkWidget *yellow_button;
-	GtkWidget *green_button;
-	GtkWidget *orange_button;
-	GtkWidget *red_button;
-	GtkWidget *blue_button;
-	GtkWidget *white_button;
 	GdkColor color;
 	XWMHints mywmhints;
+	GtkWidget *main_button;
+	GdkPixmap *main_button_pixmap;
+	GdkBitmap *main_button_mask;
+	GtkWidget *main_button_box;
 	char *dir;
 
 	gtk_init(&argc, &argv);
@@ -266,52 +269,14 @@ int main(int argc, char *argv[])
 	box = gtk_event_box_new();
 	gtk_container_add(GTK_CONTAINER (window), box);
 
-	vbox = gtk_vbox_new(FALSE, 0);
-	hbox = gtk_hbox_new(FALSE, 0);
-
-	table = gtk_table_new(2, 3, TRUE);
-	gtk_table_set_row_spacings(GTK_TABLE(table), 1);
-	gtk_table_set_col_spacings(GTK_TABLE(table), 1);
-
-	yellow_button = gtk_button_new();
-	green_button = gtk_button_new();
-	orange_button = gtk_button_new();
-	red_button = gtk_button_new();
-	blue_button = gtk_button_new();
-	white_button = gtk_button_new();
-
-	gdk_color_parse (color_schemes[0].top, &color);
-	gtk_widget_modify_bg(yellow_button, GTK_STATE_NORMAL, &color);
-	gtk_widget_modify_bg(yellow_button, GTK_STATE_PRELIGHT, &color);
-	gdk_color_parse (color_schemes[1].top, &color);
-	gtk_widget_modify_bg(green_button, GTK_STATE_NORMAL, &color);
-	gtk_widget_modify_bg(green_button, GTK_STATE_PRELIGHT, &color);
-	gdk_color_parse (color_schemes[2].top, &color);
-	gtk_widget_modify_bg(orange_button, GTK_STATE_NORMAL, &color);
-	gtk_widget_modify_bg(orange_button, GTK_STATE_PRELIGHT, &color);
-	gdk_color_parse (color_schemes[3].top, &color);
-	gtk_widget_modify_bg(red_button, GTK_STATE_NORMAL, &color);
-	gtk_widget_modify_bg(red_button, GTK_STATE_PRELIGHT, &color);
-	gdk_color_parse (color_schemes[4].top, &color);
-	gtk_widget_modify_bg(blue_button, GTK_STATE_NORMAL, &color);
-	gtk_widget_modify_bg(blue_button, GTK_STATE_PRELIGHT, &color);
-	gdk_color_parse (color_schemes[5].background, &color);
-	gtk_widget_modify_bg(white_button, GTK_STATE_NORMAL, &color);
-	gtk_widget_modify_bg(white_button, GTK_STATE_PRELIGHT, &color);
-
-	gtk_table_attach_defaults(GTK_TABLE(table), yellow_button, 0, 1, 0, 1);
-	gtk_table_attach_defaults(GTK_TABLE(table), green_button, 1, 2, 0, 1);
-	gtk_table_attach_defaults(GTK_TABLE(table), orange_button, 2, 3, 0, 1);
-	gtk_table_attach_defaults(GTK_TABLE(table), red_button, 0, 1, 1, 2);
-	gtk_table_attach_defaults(GTK_TABLE(table), blue_button, 1, 2, 1, 2);
-	gtk_table_attach_defaults(GTK_TABLE(table), white_button, 2, 3, 1, 2);
-
 	gdk_color_parse ("#fafafa", &color);
 	gtk_widget_modify_bg(box, GTK_STATE_NORMAL, &color);
 
-	gtk_box_pack_start(GTK_BOX(hbox), table, TRUE, TRUE, 4);
-	gtk_box_pack_start(GTK_BOX(vbox), hbox, TRUE, TRUE, 4);
-	gtk_container_add(GTK_CONTAINER(box), vbox);
+	main_button_pixmap = gdk_pixmap_colormap_create_from_xpm_d(NULL, colormap, &main_button_mask, NULL, wmstickynotes_xpm);
+	main_button = gtk_image_new_from_pixmap(main_button_pixmap, main_button_mask);
+	main_button_box = gtk_event_box_new();
+	gtk_container_add(GTK_CONTAINER(main_button_box), main_button);
+	gtk_container_add(GTK_CONTAINER(box), main_button_box);
 
 	gtk_widget_show_all(window);
 
@@ -325,12 +290,7 @@ int main(int argc, char *argv[])
 	XSetWMHints(GDK_DISPLAY(), GDK_WINDOW_XWINDOW(window->window), &mywmhints);
 
 	g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), NULL);
-	g_signal_connect(G_OBJECT(yellow_button), "clicked", G_CALLBACK(new_note_button_clicked), (gpointer)0);
-	g_signal_connect(G_OBJECT(green_button), "clicked", G_CALLBACK(new_note_button_clicked), (gpointer)1);
-	g_signal_connect(G_OBJECT(orange_button), "clicked", G_CALLBACK(new_note_button_clicked), (gpointer)2);
-	g_signal_connect(G_OBJECT(red_button), "clicked", G_CALLBACK(new_note_button_clicked), (gpointer)3);
-	g_signal_connect(G_OBJECT(blue_button), "clicked", G_CALLBACK(new_note_button_clicked), (gpointer)4);
-	g_signal_connect(G_OBJECT(white_button), "clicked", G_CALLBACK(new_note_button_clicked), (gpointer)5);
+	g_signal_connect(G_OBJECT(main_button_box), "button-press-event", G_CALLBACK(main_button_pressed), NULL);
 
 	umask(077);
 
@@ -377,7 +337,7 @@ void populate_note_popup(GtkTextView *entry, GtkMenu *menu, Note *note)
 	gtk_menu_shell_prepend(GTK_MENU_SHELL(menu), color_item);
 
 	current_note = note;
-	for(i=0; i<5; i++) {
+	for(i=0; i < num_color_schemes; i++) {
 		item = gtk_menu_item_new_with_label(color_schemes[i].name);
 		gtk_menu_shell_append(GTK_MENU_SHELL(color_menu), item);
 		g_signal_connect(G_OBJECT(item), "activate", G_CALLBACK(set_current_note_color), (gpointer)i);

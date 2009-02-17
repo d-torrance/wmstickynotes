@@ -28,6 +28,7 @@ typedef struct {
 	GtkWidget *resize_button_box;
 } Note;
 
+const num_color_schemes = 6;
 ColorScheme color_schemes[] = {
 	{"Yellow",	"#ffff00",	"#ffff88"},
 	{"Green",	"#66ff00",	"#d0f0c0"},
@@ -49,5 +50,6 @@ void read_old_notes();
 void populate_note_popup(GtkTextView *entry, GtkMenu *menu, Note *note);
 void set_current_note_color(GtkMenuItem *menuitem, gpointer color);
 void set_note_color(Note *note, int color);
+void main_button_pressed(GtkWidget *widget, GdkEventButton *event, gpointer user_data);
 
 #endif /* WMSTICKYNOTES_H */
