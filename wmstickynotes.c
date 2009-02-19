@@ -1,5 +1,5 @@
 /*
- * $Id: $
+ * $Id$
  *
  * Heath Caldwell <hncaldwell@gmail.com>
  *
@@ -101,9 +101,11 @@ void delete_button_pressed(GtkWidget *widget, GdkEventButton *event, GtkWidget *
 
 void main_button_pressed(GtkWidget *widget, GdkEventButton *event, gpointer user_data)
 {
-	if(event->button != 1) return;
-
-	create_note(NULL, 0);
+	if(event->button == 1) {
+		create_note(NULL, 0);
+	} else if(event->button == 3) {
+		gtk_menu_popup(GTK_MENU(user_data), NULL, NULL, NULL, NULL, event->button, event->time);
+	}
 }
 
 void create_note(Note *old_note, int color)
@@ -197,12 +199,6 @@ void create_note(Note *old_note, int color)
 	g_signal_connect(G_OBJECT(note->text_widget), "populate-popup", G_CALLBACK(populate_note_popup), note);
 }
 
-void new_note_button_clicked(GtkButton *button, gpointer color)
-{
-	if((int)color >= num_color_schemes) color = 0;
-	create_note(NULL, (int)color);
-}
-
 void read_old_notes()
 {
 	Note *note;
@@ -257,6 +253,9 @@ int main(int argc, char *argv[])
 	GdkPixmap *main_button_pixmap;
 	GdkBitmap *main_button_mask;
 	GtkWidget *main_button_box;
+	GtkWidget *color_menu;
+	GtkWidget *item;
+	int i;
 	char *dir;
 
 	gtk_init(&argc, &argv);
@@ -278,6 +277,15 @@ int main(int argc, char *argv[])
 	gtk_container_add(GTK_CONTAINER(main_button_box), main_button);
 	gtk_container_add(GTK_CONTAINER(box), main_button_box);
 
+	color_menu = gtk_menu_new();
+
+	for(i=0; i < num_color_schemes; i++) {
+		item = gtk_menu_item_new_with_label(color_schemes[i].name);
+		gtk_menu_shell_append(GTK_MENU_SHELL(color_menu), item);
+		g_signal_connect(G_OBJECT(item), "activate", G_CALLBACK(new_note_from_menu), (gpointer)i);
+	}
+
+	gtk_widget_show_all(GTK_WIDGET(color_menu));
 	gtk_widget_show_all(window);
 
 	mywmhints.initial_state = WithdrawnState;
@@ -290,7 +298,7 @@ int main(int argc, char *argv[])
 	XSetWMHints(GDK_DISPLAY(), GDK_WINDOW_XWINDOW(window->window), &mywmhints);
 
 	g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), NULL);
-	g_signal_connect(G_OBJECT(main_button_box), "button-press-event", G_CALLBACK(main_button_pressed), NULL);
+	g_signal_connect(G_OBJECT(main_button_box), "button-press-event", G_CALLBACK(main_button_pressed), color_menu);
 
 	umask(077);
 
@@ -349,6 +357,12 @@ void populate_note_popup(GtkTextView *entry, GtkMenu *menu, Note *note)
 void set_current_note_color(GtkMenuItem *menuitem, gpointer color)
 {
 	set_note_color(current_note, (int)color);
+}
+
+void new_note_from_menu(GtkMenuItem *menuitem, gpointer color)
+{
+	if((int)color >= num_color_schemes) color = 0;
+	create_note(NULL, (int)color);
 }
 
 void set_note_color(Note *note, int color)

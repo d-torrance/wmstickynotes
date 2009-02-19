@@ -1,5 +1,5 @@
 /*
- * $Id: $
+ * $Id$
  *
  * Heath Caldwell <hncaldwell@gmail.com>
  *
@@ -45,7 +45,7 @@ void bar_pressed(GtkWidget *widget, GdkEventButton *event, Note *note);
 void resize_button_pressed(GtkWidget *widget, GdkEventButton *event, Note *note);
 void delete_button_pressed(GtkWidget *widget, GdkEventButton *event, GtkWidget *window);
 void create_note(Note *old_note, int color);
-void new_note_button_clicked(GtkButton *button, gpointer color);
+void new_note_from_menu(GtkMenuItem *menuitem, gpointer color);
 void read_old_notes();
 void populate_note_popup(GtkTextView *entry, GtkMenu *menu, Note *note);
 void set_current_note_color(GtkMenuItem *menuitem, gpointer color);
