@@ -17,6 +17,7 @@
 #include <sys/types.h>
 #include <errno.h>
 #include <dirent.h>
+#include <getopt.h>
 
 #include "wmstickynotes.h"
 #include "wmstickynotes.xpm"
@@ -38,6 +39,119 @@ long int highest_note_id = 0;
 
 /* The current note that the popup menu was shown for */
 Note *current_note;
+
+
+
+int main(int argc, char *argv[])
+{
+	GtkWidget *window;
+	GtkWidget *box;
+	GdkColor color;
+	XWMHints mywmhints;
+	GtkWidget *main_button;
+	GdkPixmap *main_button_pixmap;
+	GdkBitmap *main_button_mask;
+	GtkWidget *main_button_box;
+	GtkWidget *color_menu;
+	GtkWidget *item;
+	char *dir;
+	int option_index = 0;
+	int i = 0;
+
+	static struct option long_options[] = {
+		{"dir", required_argument, 0, 'd'},
+		{"help", no_argument, 0, 'h'},
+		{0, 0, 0, 0}};
+
+	for(
+		i = getopt_long(argc, argv, "d:h", long_options, &option_index);
+		i >= 0;
+		i = getopt_long(argc, argv, "d:h", long_options, &option_index)
+	) {
+		switch(i) {
+			case 'd':
+				wmstickynotes_dir = optarg;
+				break;
+			case 'h':
+				printf("Help\n");
+				break;
+			default:
+				abort();
+		}
+	}
+
+	gtk_init(&argc, &argv);
+
+	colormap = gdk_colormap_new(gdk_visual_get_system(), TRUE);
+
+	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+	gtk_window_set_default_size(GTK_WINDOW(window), 64, 64);
+
+	box = gtk_event_box_new();
+	gtk_container_add(GTK_CONTAINER (window), box);
+
+	gdk_color_parse ("#fafafa", &color);
+	gtk_widget_modify_bg(box, GTK_STATE_NORMAL, &color);
+
+	main_button_pixmap = gdk_pixmap_colormap_create_from_xpm_d(NULL, colormap, &main_button_mask, NULL, wmstickynotes_xpm);
+	main_button = gtk_image_new_from_pixmap(main_button_pixmap, main_button_mask);
+	main_button_box = gtk_event_box_new();
+	gtk_container_add(GTK_CONTAINER(main_button_box), main_button);
+	gtk_container_add(GTK_CONTAINER(box), main_button_box);
+
+	color_menu = gtk_menu_new();
+
+	for(i=0; i < num_color_schemes; i++) {
+		item = gtk_menu_item_new_with_label(color_schemes[i].name);
+		gtk_menu_shell_append(GTK_MENU_SHELL(color_menu), item);
+		g_signal_connect(G_OBJECT(item), "activate", G_CALLBACK(new_note_from_menu), (gpointer)i);
+	}
+
+	gtk_widget_show_all(GTK_WIDGET(color_menu));
+	gtk_widget_show_all(window);
+
+	mywmhints.initial_state = WithdrawnState;
+	mywmhints.icon_window = GDK_WINDOW_XWINDOW(box->window);
+	mywmhints.icon_x = 0; 
+	mywmhints.icon_y = 0; 
+	mywmhints.window_group = GDK_WINDOW_XWINDOW(window->window);
+	mywmhints.flags = StateHint | IconWindowHint | IconPositionHint | WindowGroupHint;
+
+	XSetWMHints(GDK_DISPLAY(), GDK_WINDOW_XWINDOW(window->window), &mywmhints);
+
+	g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), NULL);
+	g_signal_connect(G_OBJECT(main_button_box), "button-press-event", G_CALLBACK(main_button_pressed), color_menu);
+
+	umask(077);
+
+	dir = calloc(strlen(wmstickynotes_dir) + strlen(getenv("HOME")) + 2, sizeof(char));
+	strcpy(dir, getenv("HOME"));
+	strcat(dir, "/");
+	strcat(dir, wmstickynotes_dir);
+
+	if(chdir(dir)) {
+		if(errno == ENOENT) {
+			if(mkdir(dir, 0777)) {
+				fprintf(stderr, "Couldn't make directory: %s\n", dir);
+				exit(1);
+			}
+			if(chdir(dir)) {
+				fprintf(stderr, "Couldn't change to directory: %s\n", dir);
+				exit(1);
+			}
+		} else {
+			fprintf(stderr, "Couldn't change to directory: %s\n", dir);
+			exit(1);
+		}
+	}
+
+	free(dir);
+
+	read_old_notes();
+	gtk_main();
+
+	return 0;
+}
 
 void delete_note(GtkWidget *widget, Note *note)
 {
@@ -241,94 +355,6 @@ void read_old_notes()
 	}
 
 	closedir(dir);
-}
-
-int main(int argc, char *argv[])
-{
-	GtkWidget *window;
-	GtkWidget *box;
-	GdkColor color;
-	XWMHints mywmhints;
-	GtkWidget *main_button;
-	GdkPixmap *main_button_pixmap;
-	GdkBitmap *main_button_mask;
-	GtkWidget *main_button_box;
-	GtkWidget *color_menu;
-	GtkWidget *item;
-	int i;
-	char *dir;
-
-	gtk_init(&argc, &argv);
-
-	colormap = gdk_colormap_new(gdk_visual_get_system(), TRUE);
-
-	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-	gtk_window_set_default_size(GTK_WINDOW(window), 64, 64);
-
-	box = gtk_event_box_new();
-	gtk_container_add(GTK_CONTAINER (window), box);
-
-	gdk_color_parse ("#fafafa", &color);
-	gtk_widget_modify_bg(box, GTK_STATE_NORMAL, &color);
-
-	main_button_pixmap = gdk_pixmap_colormap_create_from_xpm_d(NULL, colormap, &main_button_mask, NULL, wmstickynotes_xpm);
-	main_button = gtk_image_new_from_pixmap(main_button_pixmap, main_button_mask);
-	main_button_box = gtk_event_box_new();
-	gtk_container_add(GTK_CONTAINER(main_button_box), main_button);
-	gtk_container_add(GTK_CONTAINER(box), main_button_box);
-
-	color_menu = gtk_menu_new();
-
-	for(i=0; i < num_color_schemes; i++) {
-		item = gtk_menu_item_new_with_label(color_schemes[i].name);
-		gtk_menu_shell_append(GTK_MENU_SHELL(color_menu), item);
-		g_signal_connect(G_OBJECT(item), "activate", G_CALLBACK(new_note_from_menu), (gpointer)i);
-	}
-
-	gtk_widget_show_all(GTK_WIDGET(color_menu));
-	gtk_widget_show_all(window);
-
-	mywmhints.initial_state = WithdrawnState;
-	mywmhints.icon_window = GDK_WINDOW_XWINDOW(box->window);
-	mywmhints.icon_x = 0; 
-	mywmhints.icon_y = 0; 
-	mywmhints.window_group = GDK_WINDOW_XWINDOW(window->window);
-	mywmhints.flags = StateHint | IconWindowHint | IconPositionHint | WindowGroupHint;
-
-	XSetWMHints(GDK_DISPLAY(), GDK_WINDOW_XWINDOW(window->window), &mywmhints);
-
-	g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), NULL);
-	g_signal_connect(G_OBJECT(main_button_box), "button-press-event", G_CALLBACK(main_button_pressed), color_menu);
-
-	umask(077);
-
-	dir = calloc(strlen(wmstickynotes_dir) + strlen(getenv("HOME")) + 2, sizeof(char));
-	strcpy(dir, getenv("HOME"));
-	strcat(dir, "/");
-	strcat(dir, wmstickynotes_dir);
-
-	if(chdir(dir)) {
-		if(errno == ENOENT) {
-			if(mkdir(dir, 0777)) {
-				fprintf(stderr, "Couldn't make directory: %s\n", dir);
-				exit(1);
-			}
-			if(chdir(dir)) {
-				fprintf(stderr, "Couldn't change to directory: %s\n", dir);
-				exit(1);
-			}
-		} else {
-			fprintf(stderr, "Couldn't change to directory: %s\n", dir);
-			exit(1);
-		}
-	}
-
-	free(dir);
-
-	read_old_notes();
-	gtk_main();
-
-	return 0;
 }
 
 void populate_note_popup(GtkTextView *entry, GtkMenu *menu, Note *note)
