@@ -28,15 +28,16 @@ typedef struct {
 	GtkWidget *resize_button_box;
 } Note;
 
-const num_color_schemes = 6;
+const num_color_schemes = 8;
 ColorScheme color_schemes[] = {
 	{"Yellow",	"#ffff00",	"#ffff88"},
 	{"Green",	"#66ff00",	"#d0f0c0"},
 	{"Orange",	"#ff7f00",	"#ffe5b4"},
-	{"Red",		"#ff007f",	"#ffc0cb"},
+	{"Pink",	"#ff007f",	"#ffc0cb"},
 	{"Blue",	"#0000ff",	"#ccccff"},
+	{"Purple",	"#4b0082",	"#c8a2c8"},
+	{"Brown",	"#964b00",	"#f0dc82"},
 	{"White",	"#aaaaaa",	"#ffffff"}};
-
 
 void delete_note(GtkWidget *widget, Note *note);
 void save_note(GtkWidget *widget, Note *note);
