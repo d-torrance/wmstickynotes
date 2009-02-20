@@ -1,11 +1,9 @@
 /*
  * $Id$
  *
- * Heath Caldwell <hncaldwell@gmail.com>
+ * Copyright (C) 2009 Heath Caldwell <hncaldwell@gmail.com>
  *
  */
-
-/* http://mail.gnome.org/archives/gtk-list/2000-January/msg00072.html */
 
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
@@ -28,9 +26,6 @@
 #include <X11/Xlib.h>
 #include <X11/extensions/shape.h>
 
-/* The place under HOME to store notes */
-char *wmstickynotes_dir = ".wmstickynotes";
-
 GdkColormap *colormap;
 
 /* The highest note id used so far (this is used when making a new note so
@@ -41,6 +36,16 @@ long int highest_note_id = 0;
 Note *current_note;
 
 
+
+void usage()
+{
+	printf("Usage: wmstickynotes [options]\n");
+	printf("\toptions:\n");
+	printf("\t-d [dir], --directory=[dir]\tSet directory in which to store notes\n");
+	printf("\t\t\t\t\tDefaults to $HOME/%s\n", default_wmstickynotes_dir);
+	printf("\t-v, --version\tPrint version information\n");
+	printf("\t-h, --help\tPrint usage\n");
+}
 
 int main(int argc, char *argv[])
 {
@@ -54,31 +59,72 @@ int main(int argc, char *argv[])
 	GtkWidget *main_button_box;
 	GtkWidget *color_menu;
 	GtkWidget *item;
-	char *dir;
+	GtkWidget *label;
+	GtkWidget *color_box;
+	GtkWidget *hbox;
+	GdkColor gcolor;
+	char *wmstickynotes_dir = NULL;
+	gboolean use_default_dir = TRUE;
 	int option_index = 0;
 	int i = 0;
 
-	static struct option long_options[] = {
-		{"dir", required_argument, 0, 'd'},
+	struct option long_options[] = {
+		{"directory", required_argument, 0, 'd'},
+		{"version", no_argument, 0, 'v'},
 		{"help", no_argument, 0, 'h'},
 		{0, 0, 0, 0}};
 
 	for(
-		i = getopt_long(argc, argv, "d:h", long_options, &option_index);
+		i = getopt_long(argc, argv, "d:vh", long_options, &option_index);
 		i >= 0;
-		i = getopt_long(argc, argv, "d:h", long_options, &option_index)
+		i = getopt_long(argc, argv, "d:vh", long_options, &option_index)
 	) {
 		switch(i) {
 			case 'd':
 				wmstickynotes_dir = optarg;
+				use_default_dir = FALSE;
 				break;
+			case 'v':
+				printf("%s\n", PACKAGE_STRING);
+				printf("Copyright (C) 2009  %s\n", PACKAGE_BUGREPORT);
+				return 0;
 			case 'h':
-				printf("Help\n");
-				break;
+				usage();
+				return 0;
 			default:
-				abort();
+				usage();
+				return 1;
 		}
 	}
+
+	umask(077);
+
+	if(use_default_dir) {
+		wmstickynotes_dir = calloc(
+			strlen(default_wmstickynotes_dir) +
+			strlen(getenv("HOME")) + 2, sizeof(char));
+		strcpy(wmstickynotes_dir, getenv("HOME"));
+		strcat(wmstickynotes_dir, "/");
+		strcat(wmstickynotes_dir, default_wmstickynotes_dir);
+	}
+
+	if(chdir(wmstickynotes_dir)) {
+		if(errno == ENOENT) {
+			if(mkdir(wmstickynotes_dir, 0777)) {
+				fprintf(stderr, "Couldn't make directory: %s\n", wmstickynotes_dir);
+				exit(1);
+			}
+			if(chdir(wmstickynotes_dir)) {
+				fprintf(stderr, "Couldn't change to directory: %s\n", wmstickynotes_dir);
+				exit(1);
+			}
+		} else {
+			fprintf(stderr, "Couldn't change to directory: %s\n", wmstickynotes_dir);
+			exit(1);
+		}
+	}
+
+	if(use_default_dir) free(wmstickynotes_dir);
 
 	gtk_init(&argc, &argv);
 
@@ -102,7 +148,20 @@ int main(int argc, char *argv[])
 	color_menu = gtk_menu_new();
 
 	for(i=0; i < num_color_schemes; i++) {
-		item = gtk_menu_item_new_with_label(color_schemes[i].name);
+		item = gtk_menu_item_new();
+		label = gtk_label_new(color_schemes[i].name);
+		color_box = gtk_event_box_new();
+		gtk_widget_set_size_request(color_box, 15, -1);
+		hbox = gtk_hbox_new(FALSE, 4);
+
+		gdk_color_parse(color_schemes[i].top, &gcolor);
+		gtk_widget_modify_bg(color_box, GTK_STATE_NORMAL, &gcolor);
+		gtk_widget_modify_bg(color_box, GTK_STATE_PRELIGHT, &gcolor);
+
+		gtk_container_add(GTK_CONTAINER(item), hbox);
+		gtk_box_pack_start(GTK_BOX(hbox), color_box, FALSE, FALSE, 0);
+		gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
+
 		gtk_menu_shell_append(GTK_MENU_SHELL(color_menu), item);
 		g_signal_connect(G_OBJECT(item), "activate", G_CALLBACK(new_note_from_menu), (gpointer)i);
 	}
@@ -121,31 +180,6 @@ int main(int argc, char *argv[])
 
 	g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), NULL);
 	g_signal_connect(G_OBJECT(main_button_box), "button-press-event", G_CALLBACK(main_button_pressed), color_menu);
-
-	umask(077);
-
-	dir = calloc(strlen(wmstickynotes_dir) + strlen(getenv("HOME")) + 2, sizeof(char));
-	strcpy(dir, getenv("HOME"));
-	strcat(dir, "/");
-	strcat(dir, wmstickynotes_dir);
-
-	if(chdir(dir)) {
-		if(errno == ENOENT) {
-			if(mkdir(dir, 0777)) {
-				fprintf(stderr, "Couldn't make directory: %s\n", dir);
-				exit(1);
-			}
-			if(chdir(dir)) {
-				fprintf(stderr, "Couldn't change to directory: %s\n", dir);
-				exit(1);
-			}
-		} else {
-			fprintf(stderr, "Couldn't change to directory: %s\n", dir);
-			exit(1);
-		}
-	}
-
-	free(dir);
 
 	read_old_notes();
 	gtk_main();
@@ -362,6 +396,10 @@ void populate_note_popup(GtkTextView *entry, GtkMenu *menu, Note *note)
 	GtkWidget *color_menu;
 	GtkWidget *color_item;
 	GtkWidget *item;
+	GtkWidget *label;
+	GtkWidget *color_box;
+	GtkWidget *hbox;
+	GdkColor gcolor;
 	int i;
 
 	color_menu = gtk_menu_new();
@@ -372,7 +410,20 @@ void populate_note_popup(GtkTextView *entry, GtkMenu *menu, Note *note)
 
 	current_note = note;
 	for(i=0; i < num_color_schemes; i++) {
-		item = gtk_menu_item_new_with_label(color_schemes[i].name);
+		item = gtk_menu_item_new();
+		label = gtk_label_new(color_schemes[i].name);
+		color_box = gtk_event_box_new();
+		gtk_widget_set_size_request(color_box, 15, -1);
+		hbox = gtk_hbox_new(FALSE, 4);
+
+		gdk_color_parse(color_schemes[i].top, &gcolor);
+		gtk_widget_modify_bg(color_box, GTK_STATE_NORMAL, &gcolor);
+		gtk_widget_modify_bg(color_box, GTK_STATE_PRELIGHT, &gcolor);
+
+		gtk_container_add(GTK_CONTAINER(item), hbox);
+		gtk_box_pack_start(GTK_BOX(hbox), color_box, FALSE, FALSE, 0);
+		gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
+
 		gtk_menu_shell_append(GTK_MENU_SHELL(color_menu), item);
 		g_signal_connect(G_OBJECT(item), "activate", G_CALLBACK(set_current_note_color), (gpointer)i);
 	}
