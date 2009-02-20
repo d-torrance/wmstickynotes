@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * Heath Caldwell <hncaldwell@gmail.com>
+ * Copyright (C) 2009 Heath Caldwell <hncaldwell@gmail.com>
  *
  */
 
@@ -9,7 +9,7 @@
 #define WMSTICKYNOTES_H
 
 typedef struct {
-	char *name;
+char *name;
 	char *top;
 	char *background;
 } ColorScheme;
@@ -27,6 +27,9 @@ typedef struct {
 	GtkWidget *delete_button_box;
 	GtkWidget *resize_button_box;
 } Note;
+
+/* The default directory under $HOME in which to store notes */
+const char *default_wmstickynotes_dir = ".wmstickynotes";
 
 const num_color_schemes = 8;
 ColorScheme color_schemes[] = {
@@ -52,5 +55,6 @@ void populate_note_popup(GtkTextView *entry, GtkMenu *menu, Note *note);
 void set_current_note_color(GtkMenuItem *menuitem, gpointer color);
 void set_note_color(Note *note, int color);
 void main_button_pressed(GtkWidget *widget, GdkEventButton *event, gpointer user_data);
+void usage();
 
 #endif /* WMSTICKYNOTES_H */
