@@ -163,7 +163,7 @@ int main(int argc, char *argv[])
 		gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
 
 		gtk_menu_shell_append(GTK_MENU_SHELL(color_menu), item);
-		g_signal_connect(G_OBJECT(item), "activate", G_CALLBACK(new_note_from_menu), (gpointer)i);
+		g_signal_connect(G_OBJECT(item), "activate", G_CALLBACK(new_note_from_menu), &color_schemes[i]);
 	}
 
 	gtk_widget_show_all(GTK_WIDGET(color_menu));
@@ -203,6 +203,7 @@ void save_note(GtkWidget *widget, Note *note)
 	GtkTextIter start;
 	GtkTextIter end;
 	gchar *text;
+	int scheme_number;
 
 	text_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(note->text_widget));
 	gtk_text_buffer_get_start_iter(text_buffer, &start);
@@ -214,7 +215,14 @@ void save_note(GtkWidget *widget, Note *note)
 	file = fopen(filename, "w");
 	free(filename);
 
-	fprintf(file, "%d,%d,%d,%d,%d\n%s", note->x, note->y, note->width, note->height, note->color, text);
+	/* Get the scheme number.  This should probably be revisited. */
+	for(scheme_number = num_color_schemes-1; scheme_number > 0; scheme_number--) {
+		if(!strcmp(color_schemes[scheme_number].name, note->scheme->name)) break;
+	}
+
+	fprintf(
+		file, "%d,%d,%d,%d,%d\n%s",
+		note->x, note->y, note->width, note->height, scheme_number, text);
 	fclose(file);
 
 	g_free(text);
@@ -250,13 +258,13 @@ void delete_button_pressed(GtkWidget *widget, GdkEventButton *event, GtkWidget *
 void main_button_pressed(GtkWidget *widget, GdkEventButton *event, gpointer user_data)
 {
 	if(event->button == 1) {
-		create_note(NULL, 0);
+		create_note(NULL, &color_schemes[0]);
 	} else if(event->button == 3) {
 		gtk_menu_popup(GTK_MENU(user_data), NULL, NULL, NULL, NULL, event->button, event->time);
 	}
 }
 
-void create_note(Note *old_note, int color)
+void create_note(Note *old_note, ColorScheme *scheme)
 {
 	GtkWidget *window;
 	GtkWidget *vbox;
@@ -280,7 +288,7 @@ void create_note(Note *old_note, int color)
 	if(!old_note) {
 		highest_note_id++;
 		note->id = highest_note_id;
-		note->color = color;
+		note->scheme = scheme;
 	}
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -313,7 +321,7 @@ void create_note(Note *old_note, int color)
 	resize_button = gtk_image_new_from_pixmap(resize_button_pixmap, resize_button_mask);
 	note->resize_button_box = gtk_event_box_new();
 
-	set_note_color(note, note->color);
+	set_note_color(note, note->scheme);
 
 	gtk_container_add(GTK_CONTAINER(window), vbox);
 	gtk_container_add(GTK_CONTAINER(note->top_bar_box), top_bar);
@@ -355,6 +363,7 @@ void read_old_notes()
 	DIR *dir = opendir(".");
 	FILE *file;
 	struct dirent *entry;
+	int scheme_number;
 	int i;
 	char buffer[256];
 
@@ -372,8 +381,9 @@ void read_old_notes()
 		note->id = atoi(entry->d_name);
 		if(note->id > highest_note_id) highest_note_id = note->id;
 
-		fscanf(file, "%d,%d,%d,%d,%d\n", &(note->x), &(note->y), &(note->width), &(note->height), &(note->color));
-		if(note->color >= num_color_schemes) note->color = 0;
+		fscanf(file, "%d,%d,%d,%d,%d\n", &(note->x), &(note->y), &(note->width), &(note->height), &scheme_number);
+		if(scheme_number >= num_color_schemes || scheme_number < 0) scheme_number = 0;
+		note->scheme = &color_schemes[scheme_number];
 
 		text_buffer = gtk_text_buffer_new(NULL);
 		while(fgets(buffer, 256, file)) {
@@ -383,7 +393,7 @@ void read_old_notes()
 
 		note->text_widget = gtk_text_view_new_with_buffer(text_buffer);
 
-		create_note(note, 0);
+		create_note(note, note->scheme);
 
 		fclose(file);
 	}
@@ -425,34 +435,34 @@ void populate_note_popup(GtkTextView *entry, GtkMenu *menu, Note *note)
 		gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
 
 		gtk_menu_shell_append(GTK_MENU_SHELL(color_menu), item);
-		g_signal_connect(G_OBJECT(item), "activate", G_CALLBACK(set_current_note_color), (gpointer)i);
+		g_signal_connect(G_OBJECT(item), "activate", G_CALLBACK(set_current_note_color), &color_schemes[i]);
 	}
 
 	gtk_widget_show_all(GTK_WIDGET(menu));
 }
 
-void set_current_note_color(GtkMenuItem *menuitem, gpointer color)
+void set_current_note_color(GtkMenuItem *menuitem, ColorScheme *scheme)
 {
-	set_note_color(current_note, (int)color);
+	set_note_color(current_note, scheme);
+	save_note(NULL, current_note);
 }
 
-void new_note_from_menu(GtkMenuItem *menuitem, gpointer color)
+void new_note_from_menu(GtkMenuItem *menuitem, ColorScheme *scheme)
 {
-	if((int)color >= num_color_schemes) color = 0;
-	create_note(NULL, (int)color);
+	create_note(NULL, scheme);
 }
 
-void set_note_color(Note *note, int color)
+void set_note_color(Note *note, ColorScheme *scheme)
 {
 	GdkColor gcolor;
 
-	note->color = color;
+	note->scheme = scheme;
 
-	gdk_color_parse(color_schemes[note->color].top, &gcolor);
+	gdk_color_parse(scheme->top, &gcolor);
 	gtk_widget_modify_bg(note->top_bar_box, GTK_STATE_NORMAL, &gcolor);
 	gtk_widget_modify_bg(note->delete_button_box, GTK_STATE_NORMAL, &gcolor);
 
-	gdk_color_parse(color_schemes[note->color].background, &gcolor);
+	gdk_color_parse(scheme->background, &gcolor);
 	gtk_widget_modify_base(note->text_widget, GTK_STATE_NORMAL, &gcolor);
 	gtk_widget_modify_bg(note->window, GTK_STATE_NORMAL, &gcolor);
 	gtk_widget_modify_bg(note->resize_button_box, GTK_STATE_NORMAL, &gcolor);

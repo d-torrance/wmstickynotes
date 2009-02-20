@@ -9,7 +9,7 @@
 #define WMSTICKYNOTES_H
 
 typedef struct {
-char *name;
+	char *name;
 	char *top;
 	char *background;
 } ColorScheme;
@@ -20,7 +20,7 @@ typedef struct {
 	int y;
 	int width;
 	int height;
-	int color;
+	ColorScheme *scheme;
 	GtkWidget *window;
 	GtkWidget *text_widget;
 	GtkWidget *top_bar_box;
@@ -48,12 +48,12 @@ gboolean note_configure_event(GtkWidget *window, GdkEventConfigure *event, Note 
 void bar_pressed(GtkWidget *widget, GdkEventButton *event, Note *note);
 void resize_button_pressed(GtkWidget *widget, GdkEventButton *event, Note *note);
 void delete_button_pressed(GtkWidget *widget, GdkEventButton *event, GtkWidget *window);
-void create_note(Note *old_note, int color);
-void new_note_from_menu(GtkMenuItem *menuitem, gpointer color);
+void create_note(Note *old_note, ColorScheme *scheme);
+void new_note_from_menu(GtkMenuItem *menuitem, ColorScheme *scheme);
 void read_old_notes();
 void populate_note_popup(GtkTextView *entry, GtkMenu *menu, Note *note);
-void set_current_note_color(GtkMenuItem *menuitem, gpointer color);
-void set_note_color(Note *note, int color);
+void set_current_note_color(GtkMenuItem *menuitem, ColorScheme *scheme);
+void set_note_color(Note *note, ColorScheme *scheme);
 void main_button_pressed(GtkWidget *widget, GdkEventButton *event, gpointer user_data);
 void usage();
 
