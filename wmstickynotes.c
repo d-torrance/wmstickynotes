@@ -203,7 +203,6 @@ void save_note(GtkWidget *widget, Note *note)
 	GtkTextIter start;
 	GtkTextIter end;
 	gchar *text;
-	int scheme_number;
 
 	text_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(note->text_widget));
 	gtk_text_buffer_get_start_iter(text_buffer, &start);
@@ -215,14 +214,9 @@ void save_note(GtkWidget *widget, Note *note)
 	file = fopen(filename, "w");
 	free(filename);
 
-	/* Get the scheme number.  This should probably be revisited. */
-	for(scheme_number = num_color_schemes-1; scheme_number > 0; scheme_number--) {
-		if(!strcmp(color_schemes[scheme_number].name, note->scheme->name)) break;
-	}
-
 	fprintf(
-		file, "%d,%d,%d,%d,%d\n%s",
-		note->x, note->y, note->width, note->height, scheme_number, text);
+		file, "%d,%d,%d,%d,%d,%d,%s\n%s",
+		note->x, note->y, note->width, note->height, 0, 0, note->scheme->name, text);
 	fclose(file);
 
 	g_free(text);
@@ -363,7 +357,8 @@ void read_old_notes()
 	DIR *dir = opendir(".");
 	FILE *file;
 	struct dirent *entry;
-	int scheme_number;
+	int reserved1;
+	int reserved2;
 	int i;
 	char buffer[256];
 
@@ -381,9 +376,19 @@ void read_old_notes()
 		note->id = atoi(entry->d_name);
 		if(note->id > highest_note_id) highest_note_id = note->id;
 
-		fscanf(file, "%d,%d,%d,%d,%d\n", &(note->x), &(note->y), &(note->width), &(note->height), &scheme_number);
-		if(scheme_number >= num_color_schemes || scheme_number < 0) scheme_number = 0;
-		note->scheme = &color_schemes[scheme_number];
+		fscanf(file, "%d,%d,%d,%d,%d,%d,",
+			&(note->x), &(note->y), &(note->width), &(note->height),
+			&reserved1, &reserved2);
+
+		/* Get color name */
+		fgets(buffer, 256, file);
+		/* Replace the newline with a null char */
+		buffer[strlen(buffer) - 1] = '\0';
+
+		for(i=num_color_schemes; i > 0; i--) {
+			if(!strcmp(color_schemes[i].name, buffer)) break;
+		}
+		note->scheme = &color_schemes[i];
 
 		text_buffer = gtk_text_buffer_new(NULL);
 		while(fgets(buffer, 256, file)) {
