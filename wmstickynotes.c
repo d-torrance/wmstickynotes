@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 	GtkWidget *window;
 	GtkWidget *box;
 	GdkColor color;
-	XWMHints mywmhints;
+	XWMHints wmhints;
 	GtkWidget *main_button;
 	GdkPixmap *main_button_pixmap;
 	GdkBitmap *main_button_mask;
@@ -131,19 +131,20 @@ int main(int argc, char *argv[])
 	colormap = gdk_colormap_new(gdk_visual_get_system(), TRUE);
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-	gtk_window_set_default_size(GTK_WINDOW(window), 64, 64);
+	gtk_window_set_default_size(GTK_WINDOW(window), 48, 48);
 
-	box = gtk_event_box_new();
-	gtk_container_add(GTK_CONTAINER (window), box);
+	//box = gtk_event_box_new();
+	//gtk_container_add(GTK_CONTAINER(window), box);
 
-	gdk_color_parse ("#fafafa", &color);
-	gtk_widget_modify_bg(box, GTK_STATE_NORMAL, &color);
+	//gdk_color_parse ("#fafafa", &color);
+	//gtk_widget_modify_bg(box, GTK_STATE_NORMAL, &color);
 
 	main_button_pixmap = gdk_pixmap_colormap_create_from_xpm_d(NULL, colormap, &main_button_mask, NULL, wmstickynotes_xpm);
 	main_button = gtk_image_new_from_pixmap(main_button_pixmap, main_button_mask);
 	main_button_box = gtk_event_box_new();
 	gtk_container_add(GTK_CONTAINER(main_button_box), main_button);
-	gtk_container_add(GTK_CONTAINER(box), main_button_box);
+	//gtk_container_add(GTK_CONTAINER(box), main_button_box);
+	gtk_container_add(GTK_CONTAINER(window), main_button_box);
 
 	color_menu = gtk_menu_new();
 
@@ -169,14 +170,16 @@ int main(int argc, char *argv[])
 	gtk_widget_show_all(GTK_WIDGET(color_menu));
 	gtk_widget_show_all(window);
 
-	mywmhints.initial_state = WithdrawnState;
-	mywmhints.icon_window = GDK_WINDOW_XWINDOW(box->window);
-	mywmhints.icon_x = 0; 
-	mywmhints.icon_y = 0; 
-	mywmhints.window_group = GDK_WINDOW_XWINDOW(window->window);
-	mywmhints.flags = StateHint | IconWindowHint | IconPositionHint | WindowGroupHint;
+	wmhints.initial_state = WithdrawnState;
+	//wmhints.icon_window = GDK_WINDOW_XWINDOW(box->window);
+	wmhints.icon_window = GDK_WINDOW_XWINDOW(window->window);
+	wmhints.icon_x = 0; 
+	wmhints.icon_y = 0; 
+	//wmhints.window_group = GDK_WINDOW_XWINDOW(window->window);
+	wmhints.window_group = 0;
+	wmhints.flags = StateHint | IconWindowHint | IconPositionHint | WindowGroupHint;
 
-	XSetWMHints(GDK_DISPLAY(), GDK_WINDOW_XWINDOW(window->window), &mywmhints);
+	//XSetWMHints(GDK_DISPLAY(), GDK_WINDOW_XWINDOW(window->window), &wmhints);
 
 	g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), NULL);
 	g_signal_connect(G_OBJECT(main_button_box), "button-press-event", G_CALLBACK(main_button_pressed), color_menu);
