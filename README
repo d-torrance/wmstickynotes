@@ -3,8 +3,8 @@ wmstickynotes
 Heath Caldwell <hncaldwell@gmail.com>
 
 This program is a Window Maker style dockapp which allows you to create note
-windows.  The notes, along with their position, size, and color, are stored on
-disk and will be restored when wmstickynotes is run again.
+windows.  By default, the notes, along with their position, size, and color,
+are stored in files and will be restored when wmstickynotes is run again.
 
 Left click the note icon to create a new note with the default color (yellow).
 

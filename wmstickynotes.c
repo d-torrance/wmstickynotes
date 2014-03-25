@@ -29,8 +29,11 @@
 GdkColormap *colormap;
 
 /* The highest note id used so far (this is used when making a new note so
- * that no ids are clobbered */
+ * that no ids are clobbered) */
 long int highest_note_id = 0;
+
+/* Whether notes should be stored for later retrieval. */
+int store_notes = TRUE;
 
 /* The current note that the popup menu was shown for */
 Note *current_note;
@@ -40,11 +43,12 @@ Note *current_note;
 void usage()
 {
 	printf("Usage: wmstickynotes [options]\n");
-	printf("\toptions:\n");
-	printf("\t-d [dir], --directory=[dir]\tSet directory in which to store notes\n");
-	printf("\t\t\t\t\tDefaults to $HOME/%s\n", default_wmstickynotes_dir);
-	printf("\t-v, --version\tPrint version information\n");
-	printf("\t-h, --help\tPrint usage\n");
+	printf("    options:\n");
+	printf("        -n, --nostore                  Don't store notes (or read previously stored notes)\n");
+	printf("        -d [dir], --directory=[dir]    Set directory in which to store/read notes\n");
+	printf("                                       Defaults to $HOME/%s\n", default_wmstickynotes_dir);
+	printf("        -v, --version                  Print version information\n");
+	printf("        -h, --help                     Print usage\n");
 }
 
 int main(int argc, char *argv[])
@@ -69,17 +73,17 @@ int main(int argc, char *argv[])
 	int i = 0;
 
 	struct option long_options[] = {
+		{"nostore", no_argument, 0, 'n'},
 		{"directory", required_argument, 0, 'd'},
 		{"version", no_argument, 0, 'v'},
 		{"help", no_argument, 0, 'h'},
 		{0, 0, 0, 0}};
 
-	for(
-		i = getopt_long(argc, argv, "d:vh", long_options, &option_index);
-		i >= 0;
-		i = getopt_long(argc, argv, "d:vh", long_options, &option_index)
-	) {
+	while((i = getopt_long(argc, argv, "nd:vh", long_options, &option_index)) > -1) {
 		switch(i) {
+			case 'n':
+				store_notes = FALSE;
+				break;
 			case 'd':
 				wmstickynotes_dir = optarg;
 				use_default_dir = FALSE;
@@ -99,32 +103,38 @@ int main(int argc, char *argv[])
 
 	umask(077);
 
-	if(use_default_dir) {
-		wmstickynotes_dir = calloc(
-			strlen(default_wmstickynotes_dir) +
-			strlen(getenv("HOME")) + 2, sizeof(char));
-		strcpy(wmstickynotes_dir, getenv("HOME"));
-		strcat(wmstickynotes_dir, "/");
-		strcat(wmstickynotes_dir, default_wmstickynotes_dir);
-	}
-
-	if(chdir(wmstickynotes_dir)) {
-		if(errno == ENOENT) {
-			if(mkdir(wmstickynotes_dir, 0777)) {
-				fprintf(stderr, "Couldn't make directory: %s\n", wmstickynotes_dir);
+	if(store_notes) {
+		if(use_default_dir) {
+			wmstickynotes_dir = calloc(
+				strlen(default_wmstickynotes_dir) +
+				strlen(getenv("HOME")) + 2, sizeof(char));
+			if(!wmstickynotes_dir) {
+				fprintf(stderr, "calloc() failed for directory string.\n");
 				exit(1);
 			}
-			if(chdir(wmstickynotes_dir)) {
+			strcpy(wmstickynotes_dir, getenv("HOME"));
+			strcat(wmstickynotes_dir, "/");
+			strcat(wmstickynotes_dir, default_wmstickynotes_dir);
+		}
+	
+		if(chdir(wmstickynotes_dir)) {
+			if(errno == ENOENT) {
+				if(mkdir(wmstickynotes_dir, 0777)) {
+					fprintf(stderr, "Couldn't make directory: %s\n", wmstickynotes_dir);
+					exit(1);
+				}
+				if(chdir(wmstickynotes_dir)) {
+					fprintf(stderr, "Couldn't change to directory: %s\n", wmstickynotes_dir);
+					exit(1);
+				}
+			} else {
 				fprintf(stderr, "Couldn't change to directory: %s\n", wmstickynotes_dir);
 				exit(1);
 			}
-		} else {
-			fprintf(stderr, "Couldn't change to directory: %s\n", wmstickynotes_dir);
-			exit(1);
 		}
+	
+		if(use_default_dir) free(wmstickynotes_dir);
 	}
-
-	if(use_default_dir) free(wmstickynotes_dir);
 
 	gtk_init(&argc, &argv);
 
@@ -177,7 +187,9 @@ int main(int argc, char *argv[])
 	g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), NULL);
 	g_signal_connect(G_OBJECT(main_button_box), "button-press-event", G_CALLBACK(main_button_pressed), color_menu);
 
-	read_old_notes();
+	if(store_notes) {
+		read_old_notes();
+	}
 	gtk_main();
 
 	return 0;
@@ -186,8 +198,14 @@ int main(int argc, char *argv[])
 void delete_note(GtkWidget *widget, Note *note)
 {
 	char *filename;
-	asprintf(&filename, "%d", note->id);
-	unlink(filename);
+
+	if(store_notes) {
+		asprintf(&filename, "%d", note->id);
+		if(unlink(filename)) {
+			fprintf(stderr, "Error deleting note file '%s'.  errno: %d\n", filename, errno);
+		}
+	}
+
 	free(note);
 }
 
@@ -200,6 +218,10 @@ void save_note(GtkWidget *widget, Note *note)
 	GtkTextIter end;
 	gchar *text;
 
+	if(!store_notes) {
+		return;
+	}
+
 	text_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(note->text_widget));
 	gtk_text_buffer_get_start_iter(text_buffer, &start);
 	gtk_text_buffer_get_end_iter(text_buffer, &end);
@@ -208,13 +230,19 @@ void save_note(GtkWidget *widget, Note *note)
 
 	asprintf(&filename, "%d", note->id);
 	file = fopen(filename, "w");
+
+	if(file) {
+		if(fprintf(file, "%d,%d,%d,%d,%d,%d,%s\n%s",
+		           note->x, note->y, note->width, note->height, 0, 0, note->scheme->name, text)
+		   < 0) {
+			fprintf(stderr, "Error writing to note file '%s'.  errno: %d\n", filename, errno);
+		}
+		fclose(file);
+	} else {
+		fprintf(stderr, "Error opening note file '%s'.  errno: %d\n", filename, errno);
+	}
+
 	free(filename);
-
-	fprintf(
-		file, "%d,%d,%d,%d,%d,%d,%s\n%s",
-		note->x, note->y, note->width, note->height, 0, 0, note->scheme->name, text);
-	fclose(file);
-
 	g_free(text);
 }
 
