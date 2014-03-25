@@ -1,3 +1,6 @@
 Thanks to David Raufeisen for this post:
 http://mail.gnome.org/archives/gtk-list/2000-January/msg00072.html
 which helped me learn how to make a gtk+ dockapp.
+
+Thanks to wbk <coydog@coydogsoftware.net> for the suggestion to add an argument
+for not storing the notes.
