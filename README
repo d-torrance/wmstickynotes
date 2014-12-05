@@ -1,6 +1,5 @@
 wmstickynotes
 -------------
-Heath Caldwell <hncaldwell@gmail.com>
 
 This program is a Window Maker style dockapp which allows you to create note
 windows.  By default, the notes, along with their position, size, and color,

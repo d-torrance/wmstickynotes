@@ -4,3 +4,6 @@ which helped me learn how to make a gtk+ dockapp.
 
 Thanks to wbk <coydog@coydogsoftware.net> for the suggestion to add an argument
 for not storing the notes.
+
+Thanks to Moritz <thinksilicon@users.sf.net> for a patch to properly set the
+wmhints for the icon window.

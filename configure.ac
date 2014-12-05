@@ -1,10 +1,10 @@
 #
 # $Id$
 #
-# Heath Caldwell <hncaldwell@gmail.com>
+# Heath Caldwell <hncaldwell@fastmail.com>
 #
 
-AC_INIT([wmstickynotes], [0.3], [Heath Caldwell <hncaldwell@gmail.com>])
+AC_INIT([wmstickynotes], [0.4], [Heath Caldwell <hncaldwell@fastmail.com>])
 AM_INIT_AUTOMAKE
 AC_CONFIG_HEADER([config.h])
 

@@ -179,10 +179,14 @@ int main(int argc, char *argv[])
 	gtk_widget_show_all(GTK_WIDGET(color_menu));
 	gtk_widget_show_all(window);
 
+	mywmhints.icon_window = GDK_WINDOW_XID(window->window);
+	mywmhints.window_group = GDK_WINDOW_XID(window->window);
+	mywmhints.icon_x = 0;
+	mywmhints.icon_y = 0;
+	mywmhints.flags = IconWindowHint | StateHint;
 	mywmhints.initial_state = WithdrawnState;
-	mywmhints.flags = StateHint;
 
-	XSetWMHints(GDK_WINDOW_XDISPLAY(window->window), GDK_WINDOW_XWINDOW(window->window), &mywmhints);
+	XSetWMHints(GDK_WINDOW_XDISPLAY(window->window), GDK_WINDOW_XID(window->window), &mywmhints);
 
 	g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), NULL);
 	g_signal_connect(G_OBJECT(main_button_box), "button-press-event", G_CALLBACK(main_button_pressed), color_menu);
@@ -302,6 +306,10 @@ void create_note(Note *old_note, ColorScheme *scheme)
 	Note *note;
 	
 	note = old_note ? old_note : malloc(sizeof(Note));
+	if(!note) {
+		fprintf(stderr, "Failed to allocate note.\n");
+		return;
+	}
 
 	if(!old_note) {
 		highest_note_id++;
@@ -394,9 +402,13 @@ void read_old_notes()
 		}
 		if(i < strlen(entry->d_name)) continue;
 
-		file = fopen(entry->d_name, "r");
 		note = malloc(sizeof(Note));
+		if(!note) {
+			fprintf(stderr, "Failed to allocate note for %s.\n", entry->d_name);
+			continue;
+		}
 
+		file = fopen(entry->d_name, "r");
 		note->id = atoi(entry->d_name);
 		if(note->id > highest_note_id) highest_note_id = note->id;
 
