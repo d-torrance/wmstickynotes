@@ -1,3 +1,8 @@
+2014-12-05  Heath Caldwell <hncaldwell@fastmail.com>
+	* Release wmstickynotes-0.3.
+	* Fixed wmhints for icon window (patch from Moritz <thinksilicon@users.sf.net>).
+	* Added a couple malloc failure checks.
+
 2011-04-20  Heath Caldwell <hncaldwell@gmail.com>
 	* Release wmstickynotes-0.2.
 	* Fixed window withdrawing.
