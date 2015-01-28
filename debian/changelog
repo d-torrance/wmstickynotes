@@ -1,5 +1,5 @@
-wmstickynotes (0.4-1) unstable; urgency=low
+wmstickynotes (0.4-0ppa1) utopic; urgency=medium
 
-  * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
+  * Initial release.
 
- -- Doug Torrance <dtorrance@monmouthcollege.edu>  Tue, 27 Jan 2015 22:15:20 -0600
+ -- Doug Torrance <dtorrance@monmouthcollege.edu>  Wed, 28 Jan 2015 08:24:19 -0600
