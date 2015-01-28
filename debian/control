@@ -2,7 +2,8 @@ Source: wmstickynotes
 Section: x11
 Priority: optional
 Maintainer: Doug Torrance <dtorrance@monmouthcollege.edu>
-Build-Depends: debhelper (>= 9), dh-autoreconf
+Build-Depends: debhelper (>= 9), dh-autoreconf, libgtk2.0-dev, libx11-dev,
+ libxext-dev
 Standards-Version: 3.9.6
 Homepage: http://sourceforge.net/projects/wmstickynotes/
 Vcs-Git: https://github.com/d-torrance/wmstickynotes.git
