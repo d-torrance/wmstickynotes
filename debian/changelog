@@ -1,0 +1,5 @@
+wmstickynotes (0.4-1) unstable; urgency=low
+
+  * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
+
+ -- Doug Torrance <dtorrance@monmouthcollege.edu>  Tue, 27 Jan 2015 22:15:20 -0600
