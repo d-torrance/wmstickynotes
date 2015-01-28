@@ -1,0 +1,22 @@
+Description: Fix icon size.
+ The wmstickynotes window fills a Window Maker icon entirely at 64x64
+ pixels.  This results in a number of issues.  In particular, the user
+ cannot click on the outside of the icon to move it or access the menu.
+ Also, the default GTK theme window background appears around the edges
+ instead of the Window Maker icon theme.
+ .
+ We fix this by setting the window to be 48x48 pixels.
+Author: Doug Torrance <dtorrance@monmouthcollege.edu>
+Last-Update: 2015-01-28
+
+--- a/wmstickynotes.c
++++ b/wmstickynotes.c
+@@ -141,7 +141,7 @@
+ 	colormap = gdk_colormap_new(gdk_visual_get_system(), TRUE);
+ 
+ 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+-	gtk_window_set_default_size(GTK_WINDOW(window), 64, 64);
++	gtk_window_set_default_size(GTK_WINDOW(window), 48, 48);
+ 
+ 	box = gtk_event_box_new();
+ 	gtk_container_add(GTK_CONTAINER (window), box);
