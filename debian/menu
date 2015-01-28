@@ -1,0 +1,5 @@
+?package(wmstickynotes):\
+	needs="X11"\
+	section="Applications/Editors"\
+	title="wmstickynotes"\
+	command="/usr/bin/wmstickynotes"
