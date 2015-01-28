@@ -1,5 +1,5 @@
 Source: wmstickynotes
-Section: unknown
+Section: x11
 Priority: optional
 Maintainer: Doug Torrance <dtorrance@monmouthcollege.edu>
 Build-Depends: debhelper (>= 9), dh-autoreconf
