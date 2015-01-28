@@ -11,5 +11,7 @@ Vcs-Browser: https://github.com/d-torrance/wmstickynotes
 Package: wmstickynotes
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: <insert up to 60 chars description>
- <insert long description, indented with spaces>
+Description: Window Maker dockapp to create sticky notes on desktop
+ This program is a Window Maker style dockapp which allows you to create note
+ windows.  By default, the notes, along with their position, size, and color,
+ are stored in files and will be restored when wmstickynotes is run again.
