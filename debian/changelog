@@ -1,5 +1,5 @@
-wmstickynotes (0.4-0ppa1) utopic; urgency=medium
+wmstickynotes (0.4-1) unstable; urgency=medium
 
-  * Initial release.
+  * Initial release (Closes: #776496).
 
- -- Doug Torrance <dtorrance@monmouthcollege.edu>  Wed, 28 Jan 2015 08:24:19 -0600
+ -- Doug Torrance <dtorrance@monmouthcollege.edu>  Wed, 28 Jan 2015 11:20:22 -0600
