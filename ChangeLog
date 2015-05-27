@@ -1,3 +1,12 @@
+2015-05-27  Heath Caldwell <hncaldwell@fastmail.com>
+	* Release wmstickynotes-0.5.
+	* Fixed size of icon window to 48x48 so that it works better with
+	  Window Maker (patch from Doug Torrance
+	  <dtorrance@monmouthcollege.edu>).
+	* Added some failure checks (patch from Doug Torrance
+	  <dtorrance@monmouthcollege.edu>).
+	* Added man page (from Doug Torrance <dtorrance@monmouthcollege.edu>).
+
 2014-12-05  Heath Caldwell <hncaldwell@fastmail.com>
 	* Release wmstickynotes-0.3.
 	* Fixed wmhints for icon window (patch from Moritz <thinksilicon@users.sf.net>).
