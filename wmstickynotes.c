@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
 	colormap = gdk_colormap_new(gdk_visual_get_system(), TRUE);
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-	gtk_window_set_default_size(GTK_WINDOW(window), 64, 64);
+	gtk_window_set_default_size(GTK_WINDOW(window), 48, 48);
 
 	box = gtk_event_box_new();
 	gtk_container_add(GTK_CONTAINER (window), box);
@@ -404,7 +404,8 @@ void read_old_notes()
 
 		note = malloc(sizeof(Note));
 		if(!note) {
-			fprintf(stderr, "Failed to allocate note for %s.\n", entry->d_name);
+			fprintf(stderr, "Failed to allocate note for '%s'.\n",
+			        entry->d_name);
 			continue;
 		}
 
@@ -412,12 +413,20 @@ void read_old_notes()
 		note->id = atoi(entry->d_name);
 		if(note->id > highest_note_id) highest_note_id = note->id;
 
-		fscanf(file, "%d,%d,%d,%d,%d,%d,",
-			&(note->x), &(note->y), &(note->width), &(note->height),
-			&reserved1, &reserved2);
+		if(fscanf(file, "%d,%d,%d,%d,%d,%d,",
+		          &(note->x), &(note->y), &(note->width),
+		          &(note->height), &reserved1, &reserved2) < 6) {
+			fprintf(stderr, "Failed to parse note '%s': "
+			        "too few values.", entry->d_name);
+			continue;
+		}
 
 		/* Get color name */
-		fgets(buffer, 256, file);
+		if(fgets(buffer, 256, file) == NULL) {
+			fprintf(stderr, "Failed to get color from note '%s'.",
+			        entry->d_name);
+			continue;
+		}
 		/* Replace the newline with a null char */
 		buffer[strlen(buffer) - 1] = '\0';
 
