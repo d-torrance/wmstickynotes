@@ -2,8 +2,11 @@ Source: wmstickynotes
 Section: x11
 Priority: optional
 Maintainer: Doug Torrance <dtorrance@monmouthcollege.edu>
-Build-Depends: debhelper (>= 9), dh-autoreconf, libgtk2.0-dev, libx11-dev,
- libxext-dev
+Build-Depends: debhelper (>= 9),
+               dh-autoreconf,
+               libgtk2.0-dev,
+               libx11-dev,
+               libxext-dev
 Standards-Version: 3.9.6
 Homepage: http://sourceforge.net/projects/wmstickynotes/
 Vcs-Git: https://github.com/d-torrance/wmstickynotes.git
@@ -11,7 +14,7 @@ Vcs-Browser: https://github.com/d-torrance/wmstickynotes
 
 Package: wmstickynotes
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: Window Maker dockapp to create sticky notes on desktop
  This program is a Window Maker style dockapp which allows you to create note
  windows.  By default, the notes, along with their position, size, and color,
