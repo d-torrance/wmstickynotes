@@ -1,5 +1,5 @@
 /*
- * $Id$
+ * $Id: wmstickynotes.c 20 2015-05-27 22:34:03Z hnc $
  *
  * Copyright (C) 2009 Heath Caldwell <hncaldwell@gmail.com>
  *
