@@ -8,6 +8,6 @@ for not storing the notes.
 Thanks to Moritz <thinksilicon@users.sf.net> for a patch to properly set the
 wmhints for the icon window.
 
-Thanks to Doug Torrance <dtorrance@monmouthcollege.edu> for patches to fix the
-icon window size and to add some failure checks.
+Thanks to Doug Torrance <dtorrance@monmouthcollege.edu> for creating a man page
+and for patches to fix the icon window size and to add some failure checks.
 

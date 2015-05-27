@@ -12,3 +12,5 @@ wmstickynotes_SOURCES = wmstickynotes.c wmstickynotes.h wmstickynotes.xpm delete
 
 wmstickynotes_LDADD = @GTK_LIBS@ -lX11
 EXTRA_DIST = THANKS
+
+dist_man_MANS = wmstickynotes.1
