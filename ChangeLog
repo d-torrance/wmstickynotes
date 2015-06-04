@@ -1,3 +1,7 @@
+2015-06-04  Heath Caldwell <hncaldwell@fastmail.com>
+	* Release wmstickynotes-0.6.
+	* Added ability to restore notes to previous workspaces.
+
 2015-05-27  Heath Caldwell <hncaldwell@fastmail.com>
 	* Release wmstickynotes-0.5.
 	* Fixed size of icon window to 48x48 so that it works better with
