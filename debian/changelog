@@ -1,3 +1,10 @@
+wmstickynotes (0.6-1) unstable; urgency=medium
+
+  * New upstream release.
+    - Remember virtual screen (Closes: #787750).
+
+ -- Doug Torrance <dtorrance@monmouthcollege.edu>  Thu, 04 Jun 2015 16:33:23 -0500
+
 wmstickynotes (0.5-1) unstable; urgency=medium
 
   * New upstream release.
