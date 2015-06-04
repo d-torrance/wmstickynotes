@@ -25,6 +25,7 @@
 
 #include <X11/Xlib.h>
 #include <X11/extensions/shape.h>
+#include <X11/Xatom.h>
 
 GdkColormap *colormap;
 
@@ -213,6 +214,65 @@ void delete_note(GtkWidget *widget, Note *note)
 	free(note);
 }
 
+int get_workspace(Display *disp, Window win)
+{
+	Atom prop_name;
+	Atom ret_type;
+	int ret_format;
+	unsigned long ret_nitems;
+	unsigned long ret_bytes_after;
+	unsigned char *ret_prop;
+	int workspace = 0;
+
+	prop_name = XInternAtom(disp, "_NET_WM_DESKTOP", False);
+	if(XGetWindowProperty(disp, win, prop_name, 0, 1, False, XA_CARDINAL,
+	                      &ret_type, &ret_format, &ret_nitems,
+	                      &ret_bytes_after, &ret_prop) != Success) {
+		prop_name = XInternAtom(disp, "_WIN_WORKSPACE", False);
+		if(XGetWindowProperty(disp, win, prop_name, 0, 1, False,
+		                      XA_CARDINAL, &ret_type, &ret_format,
+		                      &ret_nitems, &ret_bytes_after,
+		                      &ret_prop) != Success) {
+			return 0;
+		}
+	}
+
+	if(ret_type == XA_CARDINAL) {
+		switch(ret_format) {
+		case 8:
+			workspace = (int8_t)(*ret_prop);
+			break;
+		case 16:
+			workspace = (int16_t)(*ret_prop);
+			break;
+		case 32:
+			workspace = (int32_t)(*ret_prop);
+			break;
+		defalt:
+			workspace = 0;
+		}
+	}
+
+	XFree(ret_prop);
+	return workspace;
+}
+
+int set_workspace(Display *disp, Window win, int workspace)
+{
+	XEvent event;
+	long int mask = SubstructureRedirectMask | SubstructureNotifyMask;
+
+	event.xclient.type = ClientMessage;
+	event.xclient.serial = 0;
+	event.xclient.send_event = True;
+	event.xclient.message_type = XInternAtom(disp, "_NET_WM_DESKTOP", False);
+	event.xclient.window = win;
+	event.xclient.format = 32;
+	event.xclient.data.l[0] = workspace;
+
+	return XSendEvent(disp, DefaultRootWindow(disp), False, mask, &event);
+}
+
 void save_note(GtkWidget *widget, Note *note)
 {
 	FILE *file;
@@ -237,7 +297,9 @@ void save_note(GtkWidget *widget, Note *note)
 
 	if(file) {
 		if(fprintf(file, "%d,%d,%d,%d,%d,%d,%s\n%s",
-		           note->x, note->y, note->width, note->height, 0, 0, note->scheme->name, text)
+		           note->x, note->y, note->width, note->height,
+		           note->workspace, 0, note->scheme->name,
+		           text)
 		   < 0) {
 			fprintf(stderr, "Error writing to note file '%s'.  errno: %d\n", filename, errno);
 		}
@@ -256,6 +318,7 @@ gboolean note_configure_event(GtkWidget *window, GdkEventConfigure *event, Note 
 	note->y = event->y;
 	note->width = event->width;
 	note->height = event->height;
+	note->workspace = get_workspace(GDK_WINDOW_XDISPLAY(window->window), GDK_WINDOW_XID(window->window));
 	save_note(window, note);
 	return FALSE;
 }
@@ -304,7 +367,7 @@ void create_note(Note *old_note, ColorScheme *scheme)
 	GtkTextBuffer *text_buffer;
 
 	Note *note;
-	
+
 	note = old_note ? old_note : malloc(sizeof(Note));
 	if(!note) {
 		fprintf(stderr, "Failed to allocate note.\n");
@@ -365,11 +428,13 @@ void create_note(Note *old_note, ColorScheme *scheme)
 	gtk_widget_show_all(window);
 
 	if(old_note) {
+		set_workspace(GDK_WINDOW_XDISPLAY(window->window), GDK_WINDOW_XID(window->window), old_note->workspace);
 		gtk_window_resize(GTK_WINDOW(window), old_note->width, old_note->height);
 		gtk_window_move(GTK_WINDOW(window), old_note->x, old_note->y);
 	} else {
 		gtk_window_get_position(GTK_WINDOW(window), &(note->x), &(note->y));
 		gtk_window_get_size(GTK_WINDOW(window), &(note->width), &(note->height));
+		note->workspace = get_workspace(GDK_WINDOW_XDISPLAY(window->window), GDK_WINDOW_XID(window->window));
 	}
 
 	g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(delete_note), note);
@@ -389,7 +454,6 @@ void read_old_notes()
 	DIR *dir = opendir(".");
 	FILE *file;
 	struct dirent *entry;
-	int reserved1;
 	int reserved2;
 	int i;
 	char buffer[256];
@@ -415,7 +479,7 @@ void read_old_notes()
 
 		if(fscanf(file, "%d,%d,%d,%d,%d,%d,",
 		          &(note->x), &(note->y), &(note->width),
-		          &(note->height), &reserved1, &reserved2) < 6) {
+		          &(note->height), &(note->workspace), &reserved2) < 6) {
 			fprintf(stderr, "Failed to parse note '%s': "
 			        "too few values.", entry->d_name);
 			continue;

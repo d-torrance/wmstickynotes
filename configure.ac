@@ -4,7 +4,7 @@
 # Heath Caldwell <hncaldwell@fastmail.com>
 #
 
-AC_INIT([wmstickynotes],[0.5],[Heath Caldwell <hncaldwell@fastmail.com>])
+AC_INIT([wmstickynotes],[0.6],[Heath Caldwell <hncaldwell@fastmail.com>])
 AM_INIT_AUTOMAKE
 AC_CONFIG_HEADER([config.h])
 

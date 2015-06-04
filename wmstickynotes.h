@@ -20,6 +20,7 @@ typedef struct {
 	int y;
 	int width;
 	int height;
+	int workspace;
 	ColorScheme *scheme;
 	GtkWidget *window;
 	GtkWidget *text_widget;
