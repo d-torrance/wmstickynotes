@@ -1,5 +1,5 @@
 #
-# $Id: configure.ac 22 2015-06-04 20:18:25Z hnc $
+# $Id: configure.ac 23 2015-06-05 15:44:57Z hnc $
 #
 # Heath Caldwell <hncaldwell@fastmail.com>
 #
