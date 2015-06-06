@@ -1,3 +1,7 @@
+2015-06-05  Heath Caldwell <hncaldwell@fastmail.com>
+	* Release wmstickynotes-0.7.
+	* Fixed a small typo bug.
+
 2015-06-04  Heath Caldwell <hncaldwell@fastmail.com>
 	* Release wmstickynotes-0.6.
 	* Added ability to restore notes to previous workspaces.

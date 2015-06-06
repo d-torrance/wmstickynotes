@@ -11,3 +11,6 @@ wmhints for the icon window.
 Thanks to Doug Torrance <dtorrance@monmouthcollege.edu> for creating a man page
 and for patches to fix the icon window size and to add some failure checks.
 
+Thanks to Andreas Tscharner <andy@vis.ethz.ch> for suggesting the ability to
+restore notes to previous workspaces and for pointing out a bug.
+

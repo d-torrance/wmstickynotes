@@ -82,23 +82,23 @@ int main(int argc, char *argv[])
 
 	while((i = getopt_long(argc, argv, "nd:vh", long_options, &option_index)) > -1) {
 		switch(i) {
-			case 'n':
-				store_notes = FALSE;
-				break;
-			case 'd':
-				wmstickynotes_dir = optarg;
-				use_default_dir = FALSE;
-				break;
-			case 'v':
-				printf("%s\n", PACKAGE_STRING);
-				printf("Copyright (C) 2009  %s\n", PACKAGE_BUGREPORT);
-				return 0;
-			case 'h':
-				usage();
-				return 0;
-			default:
-				usage();
-				return 1;
+		case 'n':
+			store_notes = FALSE;
+			break;
+		case 'd':
+			wmstickynotes_dir = optarg;
+			use_default_dir = FALSE;
+			break;
+		case 'v':
+			printf("%s\n", PACKAGE_STRING);
+			printf("Copyright (C) 2009  %s\n", PACKAGE_BUGREPORT);
+			return 0;
+		case 'h':
+			usage();
+			return 0;
+		default:
+			usage();
+			return 1;
 		}
 	}
 
@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
 			strcat(wmstickynotes_dir, "/");
 			strcat(wmstickynotes_dir, default_wmstickynotes_dir);
 		}
-	
+
 		if(chdir(wmstickynotes_dir)) {
 			if(errno == ENOENT) {
 				if(mkdir(wmstickynotes_dir, 0777)) {
@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
 				exit(1);
 			}
 		}
-	
+
 		if(use_default_dir) free(wmstickynotes_dir);
 	}
 
@@ -248,7 +248,7 @@ int get_workspace(Display *disp, Window win)
 		case 32:
 			workspace = (int32_t)(*ret_prop);
 			break;
-		defalt:
+		default:
 			workspace = 0;
 		}
 	}
