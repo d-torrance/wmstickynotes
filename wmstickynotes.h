@@ -12,6 +12,7 @@ typedef struct {
 	char *name;
 	char *top;
 	char *background;
+        char *text;
 } ColorScheme;
 
 typedef struct {
@@ -32,16 +33,36 @@ typedef struct {
 /* The default directory under $HOME in which to store notes */
 const char *default_wmstickynotes_dir = ".wmstickynotes";
 
-const num_color_schemes = 8;
+const num_color_schemes = 19;
 ColorScheme color_schemes[] = {
-	{"Yellow",	"#ffff00",	"#ffff88"},
-	{"Green",	"#66ff00",	"#d0f0c0"},
-	{"Orange",	"#ff7f00",	"#ffe5b4"},
-	{"Pink",	"#ff007f",	"#ffc0cb"},
-	{"Blue",	"#0000ff",	"#ccccff"},
-	{"Purple",	"#4b0082",	"#c8a2c8"},
-	{"Brown",	"#964b00",	"#f0dc82"},
-	{"White",	"#aaaaaa",	"#ffffff"}};
+    {"Yello/Purple",	"#ffff00",	"#ffff88", "#4b0082"},
+    {"Yello/Black",	"#ffff00",	"#ffff88", "#000000"},
+
+    {"Green/Red",	"#66ff00",	"#d0f0c0", "#ff0000"},
+    {"Green/White",	"#66ff00",	"#008a00", "#ffffff"},
+
+    {"Orange/Purple",	"#ff7f00",	"#ffe5b4", "#4b0082"},
+    {"Orange/Black",	"#ff7f00",	"#ffe5b4", "#000000"},
+
+    {"Pink/Brown",	"#ff007f",	"#ffc0cb", "#964b00"},
+    {"Pink/Black",	"#ff007f",	"#ffc0cb", "#000000"},
+
+    {"Blue/Yellow",	"#ccccff",	"#0000ff", "#ffee31"},
+    {"Blue/White",	"#ccccff",	"#0000ff", "#ffffff"},
+
+    {"Purple/Orange",	"#c8a2c8",	"#4b0082", "#ff7f00"},
+    {"Purple/White",	"#4b0082",	"#c8a2c8", "#ffffff"},
+
+    {"Brown/Pink",	"#964b00",	"#f0dc82", "#ff007f"},
+    {"Brown/Black",	"#964b00",	"#f0dc82", "#000000"},
+
+    {"White/Blue",	"#aaaaaa",	"#ffffff", "#0000ff"},
+    {"White/Black",	"#aaaaaa",	"#ffffff", "#000000"},
+    {"White/Green",     "#aaaaaa",	"#ffffff", "#008a00"},
+
+    {"Black/Green",     "#aaaaaa",	"#000000", "#66ff00"},
+    {"Black/White",	"#aaaaaa",	"#000000", "#ffffff"}
+};
 
 void delete_note(GtkWidget *widget, Note *note);
 void save_note(GtkWidget *widget, Note *note);

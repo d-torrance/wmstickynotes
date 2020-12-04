@@ -65,8 +65,10 @@ int main(int argc, char *argv[])
 	GtkWidget *color_menu;
 	GtkWidget *item;
 	GtkWidget *label;
-	GtkWidget *color_box;
-	GtkWidget *hbox;
+        GtkWidget *color_box1;
+        GtkWidget *color_box2;
+        GtkWidget *color_box3;
+        GtkWidget *hbox;
 	GdkColor gcolor;
 	char *wmstickynotes_dir = NULL;
 	gboolean use_default_dir = TRUE;
@@ -161,17 +163,37 @@ int main(int argc, char *argv[])
 	for(i=0; i < num_color_schemes; i++) {
 		item = gtk_menu_item_new();
 		label = gtk_label_new(color_schemes[i].name);
-		color_box = gtk_event_box_new();
-		gtk_widget_set_size_request(color_box, 15, -1);
-		hbox = gtk_hbox_new(FALSE, 4);
 
-		gdk_color_parse(color_schemes[i].top, &gcolor);
-		gtk_widget_modify_bg(color_box, GTK_STATE_NORMAL, &gcolor);
-		gtk_widget_modify_bg(color_box, GTK_STATE_PRELIGHT, &gcolor);
+                //color box1
+                color_box1 = gtk_event_box_new();
+                gtk_widget_set_size_request(color_box1, 15, -1);
+                gdk_color_parse(color_schemes[i].top, &gcolor);
+                gtk_widget_modify_bg(color_box1, GTK_STATE_NORMAL, &gcolor);
+                gtk_widget_modify_bg(color_box1, GTK_STATE_PRELIGHT, &gcolor);
+                //
 
+                //color box2
+                color_box2 = gtk_event_box_new();
+                gtk_widget_set_size_request(color_box2, 15, -1);
+                gdk_color_parse(color_schemes[i].background, &gcolor);
+                gtk_widget_modify_bg(color_box2, GTK_STATE_NORMAL, &gcolor);
+                gtk_widget_modify_bg(color_box2, GTK_STATE_PRELIGHT, &gcolor);
+                //
+
+                //color box3
+                color_box3 = gtk_event_box_new();
+                gtk_widget_set_size_request(color_box3, 15, -1);
+                gdk_color_parse(color_schemes[i].text, &gcolor);
+                gtk_widget_modify_bg(color_box3, GTK_STATE_NORMAL, &gcolor);
+                gtk_widget_modify_bg(color_box3, GTK_STATE_PRELIGHT, &gcolor);
+                //
+
+                hbox = gtk_hbox_new(FALSE, 4);
 		gtk_container_add(GTK_CONTAINER(item), hbox);
-		gtk_box_pack_start(GTK_BOX(hbox), color_box, FALSE, FALSE, 0);
-		gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
+                gtk_box_pack_start(GTK_BOX(hbox), color_box1, FALSE, FALSE, 0);
+                gtk_box_pack_start(GTK_BOX(hbox), color_box2, FALSE, FALSE, 0);
+                gtk_box_pack_start(GTK_BOX(hbox), color_box3, FALSE, FALSE, 0);
+                gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
 
 		gtk_menu_shell_append(GTK_MENU_SHELL(color_menu), item);
 		g_signal_connect(G_OBJECT(item), "activate", G_CALLBACK(new_note_from_menu), &color_schemes[i]);
@@ -343,9 +365,10 @@ void delete_button_pressed(GtkWidget *widget, GdkEventButton *event, GtkWidget *
 void main_button_pressed(GtkWidget *widget, GdkEventButton *event, gpointer user_data)
 {
 	if(event->button == 1) {
+
 		create_note(NULL, &color_schemes[0]);
 	} else if(event->button == 3) {
-		gtk_menu_popup(GTK_MENU(user_data), NULL, NULL, NULL, NULL, event->button, event->time);
+            gtk_menu_popup(GTK_MENU(user_data), NULL, NULL, NULL, NULL, event->button, event->time);
 	}
 }
 
@@ -521,35 +544,57 @@ void populate_note_popup(GtkTextView *entry, GtkMenu *menu, Note *note)
 	GtkWidget *color_item;
 	GtkWidget *item;
 	GtkWidget *label;
-	GtkWidget *color_box;
-	GtkWidget *hbox;
+        GtkWidget *color_box1;
+        GtkWidget *color_box2;
+        GtkWidget *color_box3;
+        GtkWidget *hbox;
 	GdkColor gcolor;
 	int i;
 
 	color_menu = gtk_menu_new();
-	color_item = gtk_menu_item_new_with_label("Color");
+        color_item = gtk_menu_item_new_with_label("Color scheme");
 
 	gtk_menu_item_set_submenu(GTK_MENU_ITEM(color_item), color_menu);
 	gtk_menu_shell_prepend(GTK_MENU_SHELL(menu), color_item);
 
 	current_note = note;
 	for(i=0; i < num_color_schemes; i++) {
-		item = gtk_menu_item_new();
-		label = gtk_label_new(color_schemes[i].name);
-		color_box = gtk_event_box_new();
-		gtk_widget_set_size_request(color_box, 15, -1);
-		hbox = gtk_hbox_new(FALSE, 4);
+                item = gtk_menu_item_new();
+                label = gtk_label_new(color_schemes[i].name);
 
-		gdk_color_parse(color_schemes[i].top, &gcolor);
-		gtk_widget_modify_bg(color_box, GTK_STATE_NORMAL, &gcolor);
-		gtk_widget_modify_bg(color_box, GTK_STATE_PRELIGHT, &gcolor);
+                //color box1
+                color_box1 = gtk_event_box_new();
+                gtk_widget_set_size_request(color_box1, 15, -1);
+                gdk_color_parse(color_schemes[i].top, &gcolor);
+                gtk_widget_modify_bg(color_box1, GTK_STATE_NORMAL, &gcolor);
+                gtk_widget_modify_bg(color_box1, GTK_STATE_PRELIGHT, &gcolor);
+                //
 
-		gtk_container_add(GTK_CONTAINER(item), hbox);
-		gtk_box_pack_start(GTK_BOX(hbox), color_box, FALSE, FALSE, 0);
-		gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
+                //color box2
+                color_box2 = gtk_event_box_new();
+                gtk_widget_set_size_request(color_box2, 15, -1);
+                gdk_color_parse(color_schemes[i].background, &gcolor);
+                gtk_widget_modify_bg(color_box2, GTK_STATE_NORMAL, &gcolor);
+                gtk_widget_modify_bg(color_box2, GTK_STATE_PRELIGHT, &gcolor);
+                //
 
-		gtk_menu_shell_append(GTK_MENU_SHELL(color_menu), item);
-		g_signal_connect(G_OBJECT(item), "activate", G_CALLBACK(set_current_note_color), &color_schemes[i]);
+                //color box3
+                color_box3 = gtk_event_box_new();
+                gtk_widget_set_size_request(color_box3, 15, -1);
+                gdk_color_parse(color_schemes[i].text, &gcolor);
+                gtk_widget_modify_bg(color_box3, GTK_STATE_NORMAL, &gcolor);
+                gtk_widget_modify_bg(color_box3, GTK_STATE_PRELIGHT, &gcolor);
+                //
+
+                hbox = gtk_hbox_new(FALSE, 4);
+                gtk_container_add(GTK_CONTAINER(item), hbox);
+                gtk_box_pack_start(GTK_BOX(hbox), color_box1, FALSE, FALSE, 0);
+                gtk_box_pack_start(GTK_BOX(hbox), color_box2, FALSE, FALSE, 0);
+                gtk_box_pack_start(GTK_BOX(hbox), color_box3, FALSE, FALSE, 0);
+                gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
+
+                gtk_menu_shell_append(GTK_MENU_SHELL(color_menu), item);
+                g_signal_connect(G_OBJECT(item), "activate", G_CALLBACK(set_current_note_color), &color_schemes[i]);
 	}
 
 	gtk_widget_show_all(GTK_WIDGET(menu));
@@ -580,4 +625,8 @@ void set_note_color(Note *note, ColorScheme *scheme)
 	gtk_widget_modify_base(note->text_widget, GTK_STATE_NORMAL, &gcolor);
 	gtk_widget_modify_bg(note->window, GTK_STATE_NORMAL, &gcolor);
 	gtk_widget_modify_bg(note->resize_button_box, GTK_STATE_NORMAL, &gcolor);
+
+
+        gdk_color_parse(scheme->text, &gcolor);
+        gtk_widget_modify_text(note->text_widget,GTK_STATE_NORMAL, &gcolor);
 }
